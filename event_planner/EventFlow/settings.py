@@ -43,15 +43,11 @@ INSTALLED_APPS = [
     'rest_framework',
     'rest_framework_simplejwt.token_blacklist',
     'drf_spectacular',  # Added for API documentation
+    
     # Local apps
     'users',
     'events',
     'core',
-    # other_apps
-    'sslserver',  # for local HTTPS testing
-    'debug_toolbar',  # for debugging
-    'pyopenssl',
-    'werkzeug',
 ]
 
 MIDDLEWARE = [
