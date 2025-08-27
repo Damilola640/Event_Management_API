@@ -49,6 +49,9 @@ INSTALLED_APPS = [
     'core',
     # other_apps
     'sslserver',  # for local HTTPS testing
+    'debug_toolbar',  # for debugging
+    'pyopenssl',
+    'werkzeug',
 ]
 
 MIDDLEWARE = [
