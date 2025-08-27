@@ -26,9 +26,9 @@ from drf_spectacular.views import SpectacularAPIView, SpectacularRedocView, Spec
 
 urlpatterns = [
     path('admin/', admin.site.urls),
-    path('api/', include('users.urls')),
-    path('api/', include('events.urls')),
-    path('api/', include('core.urls')),
+    path('api/', include('users.urls')),  # User-related endpoints
+    path('api/', include('events.urls')),  # Event-related endpoints
+    path('api/', include('core.urls')),    # Core functionality endpoints
 
     path('api/v1/', include([
         # Authentication and User-related Endpoints
