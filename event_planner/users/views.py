@@ -22,3 +22,12 @@ class UserProfileView(generics.RetrieveUpdateAPIView):
         serializer = UserSerializer(request.user)
         return Response(serializer.data)
 
+class UserCreateView(generics.CreateAPIView):
+    queryset = User.objects.all()
+    serializer_class = UserSerializer
+
+class UserDetailView(generics.RetrieveAPIView):
+    queryset = User.objects.all()
+    serializer_class = UserSerializer
+    permission_classes = [IsAuthenticated]
+
