@@ -38,7 +38,7 @@ class CustomUserAdmin(UserAdmin):
     )
 
     # 'add_fieldsets' controls the layout for the add user form.
-    # We've included the 'role' field here as well.
+    # The 'role' field has been included here as well.
     add_fieldsets = (
         (None, {
             "classes": ("wide",),
