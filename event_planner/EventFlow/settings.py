@@ -47,6 +47,8 @@ INSTALLED_APPS = [
     'users',
     'events',
     'core',
+    # other_apps
+    'sslserver',  # for local HTTPS testing
 ]
 
 MIDDLEWARE = [
