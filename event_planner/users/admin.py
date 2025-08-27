@@ -1,5 +1,5 @@
 # This file configures the Django Admin interface for custom User model.
-# It uses a custom UserAdmin to handle the unique fields of your model,
+# It uses a custom UserAdmin to handle the unique fields of this model,
 # such as the 'role' field, and provides a clean, logical display.
 #
 from django.contrib import admin
