@@ -4,6 +4,7 @@
 import uuid
 from django.db import models
 from django.contrib.auth import get_user_model
+from django.utils.text import slugify
 
 # Get the custom user model defined in the 'users' app
 User = get_user_model()
@@ -87,6 +88,32 @@ class Sponsor(models.Model):
     def __str__(self):
         return self.name
 
+class Category(models.Model):
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    name = models.CharField(max_length=100, unique=True)
+    slug = models.SlugField(max_length=100, unique=True, blank=True)
+
+    def save(self, *args, **kwargs):
+        if not self.slug:
+            self.slug = slugify(self.name)
+        super().save(*args, **kwargs)
+
+    def __str__(self):
+        return self.name
+
+class Tag(models.Model):
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    name = models.CharField(max_length=50, unique=True)
+    slug = models.SlugField(max_length=50, unique=True, blank=True)
+
+    def save(self, *args, **kwargs):
+        if not self.slug:
+            self.slug = slugify(self.name)
+        super().save(*args, **kwargs)
+
+    def __str__(self):
+        return self.name
+    
 class Event(models.Model):
     """
     Model representing an event.
@@ -110,12 +137,17 @@ class Event(models.Model):
     # Many-to-many relationships are defined on this model.
     speakers = models.ManyToManyField(Speaker, related_name='speaking_at', through='Event_Speaker')
     sponsors = models.ManyToManyField(Sponsor, related_name='sponsoring', through='Event_Sponsor')
-    
+    categories = models.ManyToManyField(Category, related_name='events')
+    tags = models.ManyToManyField(Tag, related_name='events')
+
+    def save(self, *args, **kwargs):
+        if not self.slug:
+            self.slug = slugify(self.name)
+        super().save(*args, **kwargs)
+
     def __str__(self):
         return self.name
-
-# --- Junction Models for Many-to-Many Relationships ---
-
+    
 class Event_Speaker(models.Model):
     """
     Junction table for the many-to-many relationship between Event and Speaker.
@@ -142,3 +174,16 @@ class Event_Sponsor(models.Model):
     
     def __str__(self):
         return f"{self.event.name} - {self.sponsor.name}"
+    
+    class Registration(models.Model):
+        id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    event = models.ForeignKey(Event, on_delete=models.CASCADE, related_name='registrations')
+    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='registrations')
+    status = models.CharField(max_length=10, choices=RSVP_STATUS_CHOICES, default='going')
+    registration_date = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        unique_together = ('event', 'user') # Ensures a user can only register for an event once
+
+    def __str__(self):
+        return f"{self.user.username} for {self.event.name}"
