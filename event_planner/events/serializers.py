@@ -1,76 +1,82 @@
 # This file defines the serializers for all event-related entities.
-# Serializers are responsible for converting complex data types,
-# like Django model instances, into native Python types that can
-# be easily rendered into JSON.
-#
 from rest_framework import serializers
-from .models import Event, Venue, Speaker, Event_Speaker, Event_Sponsor
+from .models import Event, Venue, Speaker, Sponsor, Event_Speaker, Event_Sponsor, Registration, Category, Tag
 
-# --- Junction Table Serializers ---
-# These serializers handle the data for the many-to-many relationships.
-# They are included here to provide a clear structure for how you would
-# handle the intermediate tables in your API.
+class VenueSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Venue
+        fields = '__all__'
+
+class SpeakerSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Speaker
+        fields = '__all__'
+
+class SponsorSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Sponsor
+        fields = '__all__'
 
 class EventSpeakerSerializer(serializers.ModelSerializer):
-    # This serializer is for the many-to-many relationship between Event and Speaker.
-    # It includes the presentation topic and times.
-    speaker = serializers.StringRelatedField() # Displays the speaker's name
-
+    speaker = serializers.StringRelatedField()
     class Meta:
         model = Event_Speaker
         fields = ['speaker', 'presentation_topic', 'presentation_start_time', 'presentation_end_time']
 
 class EventSponsorSerializer(serializers.ModelSerializer):
-    # This serializer handles the many-to-many relationship for sponsors.
-    sponsor = serializers.StringRelatedField() # Displays the sponsor's name
-
+    sponsor = serializers.StringRelatedField()
     class Meta:
         model = Event_Sponsor
         fields = ['sponsor', 'sponsorship_level', 'sponsorship_amount']
 
-
-# --- Core Model Serializers ---
-
-class VenueSerializer(serializers.ModelSerializer):
-    """
-    Serializer for the Venue model.
-    """
+class CategorySerializer(serializers.ModelSerializer):
     class Meta:
-        model = Venue
-        fields = '__all__' # Includes all fields from the Venue model
+        model = Category
+        fields = '__all__'
+        read_only_fields = ['slug']
 
-class SpeakerSerializer(serializers.ModelSerializer):
-    """
-    Serializer for the Speaker model.
-    """
+class TagSerializer(serializers.ModelSerializer):
     class Meta:
-        model = Speaker
-        fields = '__all__' # Includes all fields from the Speaker model
+        model = Tag
+        fields = '__all__'
+        read_only_fields = ['slug']
+
+class RegistrationSerializer(serializers.ModelSerializer):
+    user = serializers.StringRelatedField(read_only=True)
+    event_name = serializers.CharField(source='event.name', read_only=True)
+    
+    class Meta:
+        model = Registration
+        fields = ['id', 'user', 'event', 'event_name', 'status', 'registration_date']
+        read_only_fields = ['id', 'user', 'registration_date']
 
 class EventSerializer(serializers.ModelSerializer):
-    """
-    Serializer for the Event model.
-    """
-    # Use nested serializers to display speaker and sponsor details in the event response
-    speakers = EventSpeakerSerializer(source='event_speakers', many=True, read_only=True)
-    sponsors = EventSponsorSerializer(source='event_sponsors', many=True, read_only=True)
-    
-    # Use StringRelatedField to display the organizer's username
     organizer = serializers.StringRelatedField(read_only=True)
-    
-    # Use SlugRelatedField to show the venue's name when creating or updating an event
     venue = serializers.SlugRelatedField(
         slug_field='name',
         queryset=Venue.objects.all(),
-        required=False, # Make venue optional
-        allow_null=True # Allow a null value if no venue is selected
+        required=False,
+        allow_null=True
     )
-
+    categories = serializers.SlugRelatedField(
+        many=True,
+        slug_field='name',
+        queryset=Category.objects.all()
+    )
+    tags = serializers.SlugRelatedField(
+        many=True,
+        slug_field='name',
+        queryset=Tag.objects.all()
+    )
+    speakers = EventSpeakerSerializer(source='event_speakers', many=True, read_only=True)
+    sponsors = EventSponsorSerializer(source='event_sponsors', many=True, read_only=True)
+    
     class Meta:
         model = Event
         fields = [
-            'id', 'organizer', 'name', 'description', 'start_date', 'end_date',
+            'id', 'organizer', 'name', 'slug', 'description', 'start_date', 'end_date',
             'start_time', 'end_time', 'venue', 'location_details', 'status',
-            'max_attendees', 'ticket_price', 'speakers', 'sponsors'
+            'max_attendees', 'ticket_price', 'speakers', 'sponsors',
+            'categories', 'tags'
         ]
-        read_only_fields = ['id', 'organizer', 'status']
+        read_only_fields = ['id', 'organizer', 'status', 'slug']
