@@ -1,107 +1,127 @@
-# This file contains the API views for all event-related entities,
-# including events, venues, and speakers. It leverages DRF's generic
-# views to provide a clean and robust RESTful implementation.
-#
-from rest_framework import generics
+from rest_framework import generics, status
+from rest_framework.views import APIView
+from rest_framework.response import Response
 from rest_framework.permissions import IsAuthenticated, IsAuthenticatedOrReadOnly
-from rest_framework.exceptions import PermissionDenied
-from .models import Event, Venue, Speaker
-from .serializers import EventSerializer, VenueSerializer, SpeakerSerializer
+from rest_framework.exceptions import PermissionDenied, NotFound
+from django.db.models import Q
+from .models import Event, Venue, Speaker, Sponsor, Category, Tag, Registration
+from .serializers import (
+    EventSerializer, VenueSerializer, SpeakerSerializer,
+    CategorySerializer, TagSerializer, RegistrationSerializer
+)
 
-# --- Permission Class ---
-# This custom permission ensures that only organizers can create events.
 class IsOrganizer(IsAuthenticated):
-    """
-    Custom permission to only allow organizers to create objects.
-    """
     def has_permission(self, request, view):
-        # A user must be authenticated and have the 'organizer' role
-        if request.user.is_authenticated and request.user.is_organizer():
+        if request.user.is_authenticated and request.user.role == 'organizer':
             return True
         return False
 
+# --- Pagination ---
+from rest_framework.pagination import PageNumberPagination
+
+class StandardResultsSetPagination(PageNumberPagination):
+    page_size = 10
+    page_size_query_param = 'page_size'
+    max_page_size = 100
+
 # --- Event Views ---
 class EventListCreateView(generics.ListCreateAPIView):
-    """
-    API view to list all events or create a new event.
-    """
-    queryset = Event.objects.all()
     serializer_class = EventSerializer
-    permission_classes = [IsAuthenticatedOrReadOnly, IsOrganizer]
+    permission_classes = [IsAuthenticatedOrReadOnly]
+    pagination_class = StandardResultsSetPagination
 
     def get_queryset(self):
-        """
-        Optionally filters events by the authenticated user's ID
-        if they are an organizer.
-        """
-        # Get the base queryset
-        queryset = super().get_queryset()
+        queryset = Event.objects.all()
+        
+        # Filtering by date
+        start_date = self.request.query_params.get('start_date')
+        end_date = self.request.query_params.get('end_date')
+        if start_date:
+            queryset = queryset.filter(start_date__gte=start_date)
+        if end_date:
+            queryset = queryset.filter(end_date__lte=end_date)
+            
+        # Filtering by location (venue city/state)
+        city = self.request.query_params.get('city')
+        state = self.request.query_params.get('state')
+        if city:
+            queryset = queryset.filter(venue__city__icontains=city)
+        if state:
+            queryset = queryset.filter(venue__state__icontains=state)
 
-        # If the user is an organizer, they only see their own events.
-        if self.request.user.is_organizer():
-            queryset = queryset.filter(organizer=self.request.user)
+        # Filtering by organizer
+        organizer_username = self.request.query_params.get('organizer')
+        if organizer_username:
+            queryset = queryset.filter(organizer__username__icontains=organizer_username)
+            
+        # Filtering by category
+        category_slug = self.request.query_params.get('category')
+        if category_slug:
+            queryset = queryset.filter(categories__slug=category_slug)
+            
+        # Filtering by tag
+        tag_slug = self.request.query_params.get('tag')
+        if tag_slug:
+            queryset = queryset.filter(tags__slug=tag_slug)
 
         return queryset
 
     def perform_create(self, serializer):
-        """
-        Associates the new event with the authenticated user (organizer).
-        """
-        # Ensure the creating user is set as the organizer.
-        if self.request.user.is_organizer():
+        if self.request.user.role == 'organizer':
             serializer.save(organizer=self.request.user)
         else:
             raise PermissionDenied("Only organizers can create events.")
 
 class EventRetrieveUpdateDestroyView(generics.RetrieveUpdateDestroyAPIView):
-    """
-    API view to retrieve, update, or delete a single event.
-    """
     queryset = Event.objects.all()
     serializer_class = EventSerializer
-    permission_classes = [IsAuthenticated]
+    lookup_field = 'slug'  # Use slug for URL lookup
+    permission_classes = [IsAuthenticatedOrReadOnly]
+
+    def get_object(self):
+        try:
+            return Event.objects.get(slug=self.kwargs['slug'])
+        except Event.DoesNotExist:
+            raise NotFound("An event with that slug does not exist.")
 
     def perform_update(self, serializer):
-        """
-        Ensures only the event's organizer can update it.
-        """
-        # Check if the authenticated user is the organizer of the event.
         if self.request.user == self.get_object().organizer:
             serializer.save()
         else:
             raise PermissionDenied("You do not have permission to edit this event.")
 
     def perform_destroy(self, instance):
-        """
-        Ensures only the event's organizer can delete it.
-        """
-        # Check if the authenticated user is the organizer of the event.
         if self.request.user == instance.organizer:
             instance.delete()
         else:
             raise PermissionDenied("You do not have permission to delete this event.")
 
-# --- Venue Views ---
-# These views allow any authenticated user to manage venues, which is a reasonable
-# assumption for a basic API. You can change permissions as needed.
-class VenueListCreateView(generics.ListCreateAPIView):
-    queryset = Venue.objects.all()
-    serializer_class = VenueSerializer
-    permission_classes = [IsAuthenticatedOrReadOnly]
+# --- Registration Views ---
+class EventRegistrationView(APIView):
+    permission_classes = [IsAuthenticated]
 
-class VenueRetrieveUpdateDestroyView(generics.RetrieveUpdateDestroyAPIView):
-    queryset = Venue.objects.all()
-    serializer_class = VenueSerializer
-    permission_classes = [IsAuthenticatedOrReadOnly]
+    def post(self, request, slug, format=None):
+        try:
+            event = Event.objects.get(slug=slug)
+        except Event.DoesNotExist:
+            return Response({"detail": "Event not found."}, status=status.HTTP_404_NOT_FOUND)
 
-# --- Speaker Views ---
-# Similar to Venues, these views are set to be managed by authenticated users.
-class SpeakerListCreateView(generics.ListCreateAPIView):
-    queryset = Speaker.objects.all()
-    serializer_class = SpeakerSerializer
-    permission_classes = [IsAuthenticatedOrReadOnly]
+        # Check if the user is already registered for this event
+        if Registration.objects.filter(event=event, user=request.user).exists():
+            return Response({"detail": "You are already registered for this event."}, status=status.HTTP_409_CONFLICT)
+        
+        # Create a new registration
+        registration = Registration.objects.create(event=event, user=request.user)
+        serializer = RegistrationSerializer(registration)
+        return Response(serializer.data, status=status.HTTP_201_CREATED)
 
-class SpeakerRetrieveUpdateDestroyView(generics.RetrieveUpdateDestroyAPIView):
-    queryset = Speaker.objects.all()
-    serializer_class = SpeakerSerializer
+# --- Category & Tag Views ---
+class CategoryListCreateView(generics.ListCreateAPIView):
+    queryset = Category.objects.all()
+    serializer_class = CategorySerializer
+    permission_classes = [IsAuthenticatedOrReadOnly]
+    
+class TagListCreateView(generics.ListCreateAPIView):
+    queryset = Tag.objects.all()
+    serializer_class = TagSerializer
     permission_classes = [IsAuthenticatedOrReadOnly]
