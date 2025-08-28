@@ -23,6 +23,13 @@ SPONSORSHIP_LEVELS = (
     ('bronze', 'Bronze'),
 )
 
+# choices for RSVP status 
+RSVP_STATUS_CHOICES = (
+    ('going', 'Going'),
+    ('not going', 'Not going'),
+    ('maybe', 'Maybe'),
+)
+
 # --- Core Models ---
 
 class Venue(models.Model):
