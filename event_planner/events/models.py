@@ -3,6 +3,7 @@ from django.db import models
 from django.contrib.auth import get_user_model
 from django.utils.text import slugify
 from django.urls import reverse # For generating invitation links
+from django.conf import settings # To access BASE_URL for invitation links
 
 User = get_user_model()
 
