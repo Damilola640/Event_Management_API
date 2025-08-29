@@ -1,4 +1,7 @@
-import datetime
+# This file contains the API views for all event-related entities,
+# including events, venues, speakers, sponsors, categories, tags,
+# registrations, invitations, and notifications.
+#
 from rest_framework import generics, status
 from rest_framework.views import APIView
 from rest_framework.response import Response
@@ -8,15 +11,26 @@ from django.db.models import Q
 from django.utils import timezone
 
 # For full-text search (PostgreSQL specific, but 'icontains' is for SQLite/general)
-from django.contrib.postgres.search import SearchVector # If using PostgreSQL
+# from django.contrib.postgres.search import SearchVector # Uncomment if using PostgreSQL
 
-from .models import Event, Venue, Speaker, Sponsor, Category, Tag, Registration, Invitation, Notification
+from .models import (
+    Event, Venue, Speaker, Sponsor, Category, Tag, Registration, Invitation, Notification
+)
 from .serializers import (
     EventSerializer, VenueSerializer, SpeakerSerializer,
     CategorySerializer, TagSerializer, RegistrationSerializer,
-    InvitationSerializer, NotificationSerializer
+    InvitationSerializer, NotificationSerializer, SponsorSerializer
 )
-from .tasks import send_invitation_email_task, send_event_reminder_task # Import tasks
+from .tasks import send_invitation_email_task # Import your Celery task
+
+# --- Permission Class ---
+class IsOrganizer(IsAuthenticated):
+    """
+    Custom permission to only allow organizers to perform certain actions (e.g., create events).
+    """
+    def has_permission(self, request, view):
+        # A user must be authenticated and have the 'organizer' role
+        return request.user.is_authenticated and request.user.role == 'organizer'
 
 # --- Pagination ---
 from rest_framework.pagination import PageNumberPagination
@@ -38,7 +52,7 @@ class EventListCreateView(generics.ListCreateAPIView):
         # --- Full-Text Search ---
         search_query = self.request.query_params.get('search', None)
         if search_query:
-            # For PostgreSQL FTS:
+            # For PostgreSQL FTS (uncomment and install psycopg2 if using PostgreSQL)
             # queryset = queryset.annotate(
             #    search=SearchVector('name', 'description', 'location_details', 'venue__name')
             # ).filter(search=search_query)
@@ -48,8 +62,8 @@ class EventListCreateView(generics.ListCreateAPIView):
                 Q(name__icontains=search_query) |
                 Q(description__icontains=search_query) |
                 Q(location_details__icontains=search_query) |
-                Q(venue__name__icontains=search_query)
-            ).distinct() # Use distinct to avoid duplicate results for multiple matches
+                Q(venue__name__icontains=search_query) # Search by venue name
+            ).distinct() # Use distinct to avoid duplicate results if an event matches multiple conditions
 
         # Filtering by date
         start_date = self.request.query_params.get('start_date')
@@ -67,38 +81,38 @@ class EventListCreateView(generics.ListCreateAPIView):
         if state:
             queryset = queryset.filter(venue__state__icontains=state)
 
-        # Filtering by organizer
+        # Filtering by organizer username
         organizer_username = self.request.query_params.get('organizer')
         if organizer_username:
             queryset = queryset.filter(organizer__username__icontains=organizer_username)
             
-        # Filtering by category
+        # Filtering by category slug
         category_slug = self.request.query_params.get('category')
         if category_slug:
             queryset = queryset.filter(categories__slug=category_slug)
             
-        # Filtering by tag
+        # Filtering by tag slug
         tag_slug = self.request.query_params.get('tag')
         if tag_slug:
             queryset = queryset.filter(tags__slug=tag_slug)
 
         # Filtering by public/private events
-        # Authenticated users can see private events they are invited to or organized
         # Unauthenticated users only see public events
         if not self.request.user.is_authenticated:
             queryset = queryset.filter(is_private=False)
         else:
-            # Include events where the user is the organizer or has an accepted invitation
+            # Authenticated users see public events, events they organized,
+            # or private events they have an accepted invitation for.
             queryset = queryset.filter(
                 Q(is_private=False) |
                 Q(organizer=self.request.user) |
                 Q(invitations__email=self.request.user.email, invitations__accepted=True)
-            ).distinct()
-
+            ).distinct() # Use distinct to prevent duplicate events if multiple conditions apply
 
         return queryset
 
     def perform_create(self, serializer):
+        # Only organizers can create events
         if self.request.user.role == 'organizer':
             serializer.save(organizer=self.request.user)
         else:
@@ -107,7 +121,7 @@ class EventListCreateView(generics.ListCreateAPIView):
 class EventRetrieveUpdateDestroyView(generics.RetrieveUpdateDestroyAPIView):
     queryset = Event.objects.all()
     serializer_class = EventSerializer
-    lookup_field = 'slug'
+    lookup_field = 'slug'  # Use slug for URL lookup
     permission_classes = [IsAuthenticatedOrReadOnly]
 
     def get_object(self):
@@ -116,29 +130,32 @@ class EventRetrieveUpdateDestroyView(generics.RetrieveUpdateDestroyAPIView):
         except Event.DoesNotExist:
             raise NotFound("An event with that slug does not exist.")
         
-        # Check permission for private events
-        if event.is_private and not self.request.user.is_authenticated:
-            raise PermissionDenied("You do not have permission to view this private event.")
-        
-        if event.is_private and self.request.user.is_authenticated:
+        # Permissions for private events
+        if event.is_private:
+            if not self.request.user.is_authenticated:
+                raise PermissionDenied("Authentication required to view this private event.")
+            
             # Organizer always has access
             if self.request.user == event.organizer:
                 return event
+            
             # Check if user has an accepted invitation
             if Invitation.objects.filter(event=event, email=self.request.user.email, accepted=True).exists():
                 return event
+                
             raise PermissionDenied("You do not have permission to view this private event.")
             
         return event
 
-
     def perform_update(self, serializer):
+        # Only the event's organizer can update it
         if self.request.user == self.get_object().organizer:
             serializer.save()
         else:
             raise PermissionDenied("You do not have permission to edit this event.")
 
     def perform_destroy(self, instance):
+        # Only the event's organizer can delete it
         if self.request.user == instance.organizer:
             instance.delete()
         else:
@@ -160,13 +177,48 @@ class EventRegistrationView(APIView):
                not Invitation.objects.filter(event=event, email=request.user.email, accepted=True).exists():
                 raise PermissionDenied("You do not have permission to register for this private event.")
 
+        # Check if the user is already registered for this event
         if Registration.objects.filter(event=event, user=request.user).exists():
             return Response({"detail": "You are already registered for this event."}, status=status.HTTP_409_CONFLICT)
         
+        # Create a new registration
         registration = Registration.objects.create(event=event, user=request.user)
         serializer = RegistrationSerializer(registration)
         return Response(serializer.data, status=status.HTTP_201_CREATED)
 
+
+# --- Venue Views ---
+class VenueListCreateView(generics.ListCreateAPIView):
+    queryset = Venue.objects.all()
+    serializer_class = VenueSerializer
+    permission_classes = [IsAuthenticatedOrReadOnly] # Consider if only organizers can add venues
+
+class VenueRetrieveUpdateDestroyView(generics.RetrieveUpdateDestroyAPIView):
+    queryset = Venue.objects.all()
+    serializer_class = VenueSerializer
+    permission_classes = [IsAuthenticatedOrReadOnly] # Consider if only organizers can edit/delete venues
+
+# --- Speaker Views ---
+class SpeakerListCreateView(generics.ListCreateAPIView):
+    queryset = Speaker.objects.all()
+    serializer_class = SpeakerSerializer
+    permission_classes = [IsAuthenticatedOrReadOnly] # Consider if only organizers can add speakers
+
+class SpeakerRetrieveUpdateDestroyView(generics.RetrieveUpdateDestroyAPIView):
+    queryset = Speaker.objects.all()
+    serializer_class = SpeakerSerializer
+    permission_classes = [IsAuthenticatedOrReadOnly] # Consider if only organizers can edit/delete speakers
+
+# --- Sponsor Views ---
+class SponsorListCreateView(generics.ListCreateAPIView):
+    queryset = Sponsor.objects.all()
+    serializer_class = SponsorSerializer
+    permission_classes = [IsAuthenticatedOrReadOnly] # Consider if only organizers can add sponsors
+
+class SponsorRetrieveUpdateDestroyView(generics.RetrieveUpdateDestroyAPIView):
+    queryset = Sponsor.objects.all()
+    serializer_class = SponsorSerializer
+    permission_classes = [IsAuthenticatedOrReadOnly] # Consider if only organizers can edit/delete sponsors
 
 # --- Category & Tag Views ---
 class CategoryListCreateView(generics.ListCreateAPIView):
@@ -182,7 +234,7 @@ class TagListCreateView(generics.ListCreateAPIView):
 
 # --- Invitation Views ---
 class InvitationSendView(APIView):
-    permission_classes = [IsAuthenticated] # Only authenticated users can send invitations
+    permission_classes = [IsAuthenticated]
 
     def post(self, request, slug):
         try:
@@ -190,11 +242,9 @@ class InvitationSendView(APIView):
         except Event.DoesNotExist:
             return Response({"detail": "Event not found."}, status=status.HTTP_404_NOT_FOUND)
         
-        # Only the organizer of the event can send invitations
         if request.user != event.organizer:
             raise PermissionDenied("You do not have permission to send invitations for this event.")
         
-        # Ensure the event is private
         if not event.is_private:
             return Response({"detail": "Invitations can only be sent for private events."}, status=status.HTTP_400_BAD_REQUEST)
 
@@ -202,20 +252,19 @@ class InvitationSendView(APIView):
         if not email:
             raise ValidationError({"email": "Email is required."})
 
-        # Prevent sending multiple invitations to the same email for the same event
         if Invitation.objects.filter(event=event, email=email).exists():
             return Response({"detail": "An invitation has already been sent to this email for this event."}, status=status.HTTP_409_CONFLICT)
 
         invitation = Invitation.objects.create(event=event, email=email, invited_by=request.user)
         
         # Send the invitation email asynchronously using Celery
-        send_invitation_email_task.delay(str(invitation.id)) # Use .delay() for async execution
+        send_invitation_email_task.delay(str(invitation.id))
         
         serializer = InvitationSerializer(invitation)
-        return Response(serializer.data, status=status.HTTP_202_ACCEPTED) # 202 Accepted because email is sent in background
+        return Response(serializer.data, status=status.HTTP_202_ACCEPTED)
 
 class InvitationAcceptView(APIView):
-    permission_classes = [AllowAny] # Allow unauthenticated users to accept
+    permission_classes = [AllowAny]
 
     def get(self, request, token):
         try:
@@ -227,14 +276,7 @@ class InvitationAcceptView(APIView):
         invitation.accepted_at = timezone.now()
         invitation.save()
 
-        # Optionally, automatically register the user if they are logged in
-        # or if an account with that email exists. For simplicity, we just
-        # mark the invitation as accepted here. A frontend would then
-        # prompt the user to login/register and then proceed to register for the event.
-        
-        # If an account with this email exists and is logged in, you could
-        # automatically create a registration here.
-        # Example:
+        # Optional: Automatically register the user if they are authenticated and their email matches
         # if request.user.is_authenticated and request.user.email == invitation.email:
         #     Registration.objects.get_or_create(event=invitation.event, user=request.user)
         #     return Response({"detail": "Invitation accepted and you are registered for the event!"}, status=status.HTTP_200_OK)
