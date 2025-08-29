@@ -130,7 +130,7 @@ USE_TZ = True
 
 STATIC_URL = 'static/'
 STATICFILES_DIRS = [
-    os.path.join(BASE_DIR, 'static'), # Correctly points to the 'static' folder of the project root
+    os.path.join(BASE_DIR, 'static'), # Correctly points to the 'staticfiles' folder of the project root
 ]
 
 STATIC_ROOT = os.path.join(BASE_DIR, 'staticfiles')
