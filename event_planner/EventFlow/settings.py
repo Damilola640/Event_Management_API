@@ -46,7 +46,14 @@ INSTALLED_APPS = [
     'rest_framework',
     'rest_framework_simplejwt.token_blacklist',
     'drf_spectacular',  # Added for API documentation
-    
+    'django_celery_beat',
+    'django_celery_results',
+    'django_filters',
+    'drf_spectacular',
+    'corsheaders',
+    'rest_framework.authtoken',
+    'rest_framework_swagger',
+
     # Local apps
     'users',
     'events',
