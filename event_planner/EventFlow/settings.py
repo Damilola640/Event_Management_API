@@ -49,10 +49,8 @@ INSTALLED_APPS = [
     'django_celery_beat',
     'django_celery_results',
     'django_filters',
-    'drf_spectacular',
     'corsheaders',
     'rest_framework.authtoken',
-    'rest_framework_swagger',
 
     # Local apps
     'users',
