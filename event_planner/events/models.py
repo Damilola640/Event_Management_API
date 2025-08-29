@@ -1,15 +1,11 @@
-# This file defines the Django models for all event-related entities.
-# These models represent the core data structure of your API.
-#
 import uuid
 from django.db import models
 from django.contrib.auth import get_user_model
 from django.utils.text import slugify
+from django.urls import reverse # For generating invitation links
 
-# Get the custom user model defined in the 'users' app
 User = get_user_model()
 
-# Create choices for event status
 EVENT_STATUS_CHOICES = (
     ('upcoming', 'Upcoming'),
     ('active', 'Active'),
@@ -17,26 +13,19 @@ EVENT_STATUS_CHOICES = (
     ('completed', 'Completed'),
 )
 
-# Create choices for sponsorship level
 SPONSORSHIP_LEVELS = (
     ('gold', 'Gold'),
     ('silver', 'Silver'),
     ('bronze', 'Bronze'),
 )
 
-# choices for RSVP status 
 RSVP_STATUS_CHOICES = (
     ('going', 'Going'),
-    ('not going', 'Not going'),
+    ('not_going', 'Not Going'),
     ('maybe', 'Maybe'),
 )
 
-# --- Core Models ---
-
 class Venue(models.Model):
-    """
-    Model representing a physical venue where events are held.
-    """
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
     name = models.CharField(max_length=255)
     address = models.TextField()
@@ -54,9 +43,6 @@ class Venue(models.Model):
         return self.name
 
 class Speaker(models.Model):
-    """
-    Model representing a speaker at an event.
-    """
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
     first_name = models.CharField(max_length=100)
     last_name = models.CharField(max_length=100)
@@ -72,9 +58,6 @@ class Speaker(models.Model):
         return f"{self.first_name} {self.last_name}"
 
 class Sponsor(models.Model):
-    """
-    Model representing a sponsor of an event.
-    """
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
     name = models.CharField(max_length=255)
     contact_person = models.CharField(max_length=255, blank=True, null=True)
@@ -113,15 +96,13 @@ class Tag(models.Model):
 
     def __str__(self):
         return self.name
-    
+
 class Event(models.Model):
-    """
-    Model representing an event.
-    """
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
     organizer = models.ForeignKey(User, on_delete=models.CASCADE, related_name='organized_events')
     venue = models.ForeignKey(Venue, on_delete=models.SET_NULL, related_name='events', blank=True, null=True)
     name = models.CharField(max_length=255)
+    slug = models.SlugField(max_length=255, unique=True, blank=True)
     description = models.TextField()
     start_date = models.DateField()
     end_date = models.DateField()
@@ -131,15 +112,15 @@ class Event(models.Model):
     status = models.CharField(max_length=10, choices=EVENT_STATUS_CHOICES, default='upcoming')
     max_attendees = models.IntegerField(blank=True, null=True)
     ticket_price = models.DecimalField(max_digits=10, decimal_places=2, blank=True, null=True)
+    is_private = models.BooleanField(default=False) # New field for private events
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
     
-    # Many-to-many relationships are defined on this model.
     speakers = models.ManyToManyField(Speaker, related_name='speaking_at', through='Event_Speaker')
     sponsors = models.ManyToManyField(Sponsor, related_name='sponsoring', through='Event_Sponsor')
     categories = models.ManyToManyField(Category, related_name='events')
     tags = models.ManyToManyField(Tag, related_name='events')
-
+    
     def save(self, *args, **kwargs):
         if not self.slug:
             self.slug = slugify(self.name)
@@ -147,11 +128,8 @@ class Event(models.Model):
 
     def __str__(self):
         return self.name
-    
+
 class Event_Speaker(models.Model):
-    """
-    Junction table for the many-to-many relationship between Event and Speaker.
-    """
     event = models.ForeignKey(Event, on_delete=models.CASCADE, related_name='event_speakers')
     speaker = models.ForeignKey(Speaker, on_delete=models.CASCADE)
     presentation_topic = models.CharField(max_length=255, blank=True, null=True)
@@ -162,9 +140,6 @@ class Event_Speaker(models.Model):
         return f"{self.event.name} - {self.speaker.first_name}"
 
 class Event_Sponsor(models.Model):
-    """
-    Junction table for the many-to-many relationship between Event and Sponsor.
-    """
     event = models.ForeignKey(Event, on_delete=models.CASCADE, related_name='event_sponsors')
     sponsor = models.ForeignKey(Sponsor, on_delete=models.CASCADE)
     sponsorship_level = models.CharField(max_length=10, choices=SPONSORSHIP_LEVELS)
@@ -174,16 +149,58 @@ class Event_Sponsor(models.Model):
     
     def __str__(self):
         return f"{self.event.name} - {self.sponsor.name}"
-    
-    class Registration(models.Model):
-        id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+
+class Registration(models.Model):
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
     event = models.ForeignKey(Event, on_delete=models.CASCADE, related_name='registrations')
     user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='registrations')
     status = models.CharField(max_length=10, choices=RSVP_STATUS_CHOICES, default='going')
     registration_date = models.DateTimeField(auto_now_add=True)
 
     class Meta:
-        unique_together = ('event', 'user') # Ensures a user can only register for an event once
+        unique_together = ('event', 'user')
 
     def __str__(self):
         return f"{self.user.username} for {self.event.name}"
+
+class Invitation(models.Model):
+    """
+    Model for private event invitations.
+    """
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    event = models.ForeignKey(Event, on_delete=models.CASCADE, related_name='invitations')
+    email = models.EmailField()
+    token = models.UUIDField(default=uuid.uuid4, unique=True, editable=False)
+    accepted = models.BooleanField(default=False)
+    invited_by = models.ForeignKey(User, on_delete=models.SET_NULL, null=True, blank=True, related_name='sent_invitations')
+    created_at = models.DateTimeField(auto_now_add=True)
+    accepted_at = models.DateTimeField(null=True, blank=True)
+    
+    class Meta:
+        unique_together = ('event', 'email') # A specific email can only be invited once per event
+
+    def get_absolute_url(self):
+        """Generates the full URL for accepting the invitation."""
+        # You'll need to define BASE_URL in your settings for this to work in production
+        base_url = getattr(settings, 'BASE_URL', 'http://localhost:8000')
+        return f"{base_url}{reverse('accept-invitation', kwargs={'token': self.token})}"
+
+    def __str__(self):
+        return f"Invitation for {self.email} to {self.event.name}"
+
+class Notification(models.Model):
+    """
+    Model for user notifications (e.g., event reminders, invitation accepted).
+    """
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='notifications')
+    message = models.TextField()
+    event = models.ForeignKey(Event, on_delete=models.CASCADE, null=True, blank=True, related_name='event_notifications')
+    read = models.BooleanField(default=False)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        ordering = ['-created_at']
+
+    def __str__(self):
+        return f"Notification for {self.user.username}: {self.message[:50]}..."
