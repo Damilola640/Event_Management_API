@@ -3,9 +3,9 @@ import os
 from celery import Celery
 
 # Set the default Django settings module for the 'celery' program.
-os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'Event_Management_API.settings')
+os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'event_planner.settings')
 
-app = Celery('Event_Management_API')
+app = Celery('event_planner')
 
 # Using a string here means the worker doesn't have to serialize
 # the configuration object to child processes.
