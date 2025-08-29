@@ -78,8 +78,3 @@ class RegistrationAdmin(admin.ModelAdmin):
     list_display = ("event", "user", "status", "registration_date")
     list_filter = ("status", "registration_date")
     search_fields = ("user__username", "event__name")
-
-# Unregister the intermediate models from the admin since they are
-# managed via the inline classes on the Event model.
-admin.site.unregister(Event_Speaker)
-admin.site.unregister(Event_Sponsor)
