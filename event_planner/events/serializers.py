@@ -1,6 +1,9 @@
-# This file defines the serializers for all event-related entities.
 from rest_framework import serializers
-from .models import Event, Venue, Speaker, Sponsor, Event_Speaker, Event_Sponsor, Registration, Category, Tag
+from .models import (
+    Event, Venue, Speaker, Sponsor, Event_Speaker, Event_Sponsor,
+    Registration, Category, Tag, Invitation, Notification
+)
+from django.conf import settings # Import settings to access BASE_URL
 
 class VenueSerializer(serializers.ModelSerializer):
     class Meta:
@@ -50,6 +53,23 @@ class RegistrationSerializer(serializers.ModelSerializer):
         fields = ['id', 'user', 'event', 'event_name', 'status', 'registration_date']
         read_only_fields = ['id', 'user', 'registration_date']
 
+class InvitationSerializer(serializers.ModelSerializer):
+    event_name = serializers.CharField(source='event.name', read_only=True)
+    invited_by_username = serializers.CharField(source='invited_by.username', read_only=True)
+    
+    class Meta:
+        model = Invitation
+        fields = ['id', 'event', 'event_name', 'email', 'token', 'accepted', 'invited_by', 'invited_by_username', 'created_at', 'accepted_at']
+        read_only_fields = ['id', 'token', 'accepted', 'invited_by', 'invited_by_username', 'created_at', 'accepted_at']
+
+class NotificationSerializer(serializers.ModelSerializer):
+    event_name = serializers.CharField(source='event.name', read_only=True)
+    
+    class Meta:
+        model = Notification
+        fields = ['id', 'user', 'message', 'event', 'event_name', 'read', 'created_at']
+        read_only_fields = ['id', 'user', 'created_at']
+
 class EventSerializer(serializers.ModelSerializer):
     organizer = serializers.StringRelatedField(read_only=True)
     venue = serializers.SlugRelatedField(
@@ -76,7 +96,7 @@ class EventSerializer(serializers.ModelSerializer):
         fields = [
             'id', 'organizer', 'name', 'slug', 'description', 'start_date', 'end_date',
             'start_time', 'end_time', 'venue', 'location_details', 'status',
-            'max_attendees', 'ticket_price', 'speakers', 'sponsors',
-            'categories', 'tags'
+            'max_attendees', 'ticket_price', 'is_private', # Added is_private
+            'speakers', 'sponsors', 'categories', 'tags'
         ]
         read_only_fields = ['id', 'organizer', 'status', 'slug']
