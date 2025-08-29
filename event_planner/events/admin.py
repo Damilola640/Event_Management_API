@@ -24,7 +24,8 @@ class RegistrationInline(admin.TabularInline):
     # This inline allows you to see all registrations for a given event.
     model = Registration
     extra = 0 # No extra blank forms for registrations, as they are created by users
-    readonly_fields = ('user', 'created_at', 'status')
+    # FIX: Changed 'created_at' to 'registration_date' to match the model
+    readonly_fields = ('user', 'status', 'registration_date')
 
 
 # --- Model Admin Classes ---
