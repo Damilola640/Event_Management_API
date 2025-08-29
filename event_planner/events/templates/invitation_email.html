@@ -1,0 +1,24 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Event Invitation</title>
+</head>
+<body>
+    <h1>You're Invited!</h1>
+    <p>Dear {{ user.username }},</p>
+    <p>We are excited to invite you to our upcoming event: {{ event.title }}</p>
+    <p>This is a private event. To accept your invitation, please click the link below:</p>
+    <p><a href="{{ invitation_link }}">Accept Invitation</a></p>
+    <p>Event Description: {{ event.description }}</p>
+    <p>Date: {{ event.date }}</p>
+    <p>Location: {{ event.location }}</p>
+    <p>Starts: {{ event.start_date }} at {{ event.time }}</p>
+    <p>Invited by: {{ invited_by }}</p>
+    <p>RSVP Status: {{ rsvp_status }}</p>
+    <p>We hope to see you there!</p>
+    <p>If you have any questions, please contact the organizer.</p>
+    <p>Thanks,<br>The Event Management Team</p>
+</body>
+</html>
