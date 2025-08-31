@@ -178,7 +178,8 @@ class EventRetrieveUpdateDestroyView(generics.RetrieveUpdateDestroyAPIView):
 )
 class EventRegistrationView(APIView):
     permission_classes = [IsAuthenticated]
-    
+    serializer_class = RegistrationSerializer # Helps drf-spectacular generate the schema
+
     def post(self, request, slug, format=None):
         try:
             event = Event.objects.get(slug=slug)
