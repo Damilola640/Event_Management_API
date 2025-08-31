@@ -24,10 +24,6 @@ class UserListView(generics.ListAPIView):
     # You might want to restrict this to admins in a real application
     permission_classes = [IsAuthenticated]
 
-class UserCreateView(generics.CreateAPIView):
-    queryset = User.objects.all()
-    serializer_class = UserSerializer
-
 class UserDetailView(generics.RetrieveAPIView):
     queryset = User.objects.all()
     serializer_class = UserSerializer

@@ -3,6 +3,7 @@ from rest_framework.response import Response
 from rest_framework.permissions import AllowAny
 from rest_framework import status
 from drf_spectacular.utils import extend_schema
+from django.utils import timezone
 from drf_spectacular.types import OpenApiTypes
 
 @extend_schema(
@@ -28,6 +29,6 @@ class HealthCheckView(APIView):
             "status": "ok",
             "message": "Event Management API is operational!",
             "version": "1.0.0",
-            "timestamp": request.user.last_login if request.user.is_authenticated else None
+            "timestamp": timezone.now().isoformat()
         }
         return Response(response_data, status=status.HTTP_200_OK)
