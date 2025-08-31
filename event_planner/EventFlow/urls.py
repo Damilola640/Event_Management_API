@@ -16,11 +16,14 @@ Including another URLconf
 """
 from django.contrib import admin
 from django.urls import path, include
+from django.views.generic import RedirectView
 from django.conf import settings
 from django.conf.urls.static import static
 from drf_spectacular.views import SpectacularAPIView, SpectacularRedocView, SpectacularSwaggerView
 
 urlpatterns = [
+    # Redirect the root URL to the API docs for a better developer experience
+    path('', RedirectView.as_view(url='/api/docs/', permanent=False), name='index'),
     path('admin/', admin.site.urls),
 
     # API documentation
