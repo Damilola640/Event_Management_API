@@ -60,6 +60,7 @@ INSTALLED_APPS = [
 
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
+    'corsheaders.middleware.CorsMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.common.CommonMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
@@ -135,7 +136,7 @@ USE_TZ = True
 
 STATIC_URL = 'static/'
 STATICFILES_DIRS = [
-    os.path.join(BASE_DIR, 'static'), # Correctly points to the 'staticfiles' folder of the project root
+    os.path.join(BASE_DIR, 'static'), # Points to the project-level 'static' folder for development assets.
 ]
 
 STATIC_ROOT = os.path.join(BASE_DIR, 'staticfiles')
@@ -221,3 +222,13 @@ EMAIL_USE_TLS = os.getenv('EMAIL_USE_TLS', 'True').lower() == 'true'
 EMAIL_HOST_USER = os.getenv('EMAIL_HOST_USER', 'your_email@example.com')
 EMAIL_HOST_PASSWORD = os.getenv('EMAIL_HOST_PASSWORD', 'your_email_password')
 DEFAULT_FROM_EMAIL = os.getenv('DEFAULT_FROM_EMAIL', 'noreply@your-event-app.com')
+
+# --- CORS Configuration ---
+# For development, you might allow all origins by uncommenting the line below.
+# WARNING: Do not use this in production.
+# CORS_ALLOW_ALL_ORIGINS = True
+
+# For production, specify the exact frontend origins that are allowed to make requests.
+CORS_ALLOWED_ORIGINS = [
+    # "https://your-frontend-domain.com",
+]
