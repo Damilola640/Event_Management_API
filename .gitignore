@@ -1,0 +1,78 @@
+# Environment variables
+# Never commit your .env file!
+.env
+.env.*
+!.env.example
+
+# Virtual Environment
+# This is the folder for your local dependencies (e.g., myenv, venv)
+myenv/
+venv/
+.venv/
+env/
+ENV/
+
+# Django
+# Ignore the local SQLite database
+db.sqlite3
+db.sqlite3-journal
+
+# Ignore media files (user-uploaded content)
+media/
+
+# Ignore static files collected by collectstatic
+staticfiles/
+
+# Ignore log files
+*.log
+
+# Python
+# Ignore bytecode and compiled files
+__pycache__/
+*.py[cod]
+*$py.class
+
+# C extensions
+*.so
+
+# Distribution / packaging
+.Python
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+*.egg-info/
+.installed.cfg
+*.egg
+
+# Installer logs
+pip-log.txt
+pip-delete-this-directory.txt
+
+# Unit test / coverage reports
+htmlcov/
+.tox/
+.coverage
+.coverage.*
+.cache
+.pytest_cache/
+
+# Celery
+celerybeat-schedule
+celerybeat.pid
+
+# IDE and editor configuration
+.idea/
+.vscode/
+
+# OS-generated files
+.DS_Store
+Thumbs.db
