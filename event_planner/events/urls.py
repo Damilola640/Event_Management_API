@@ -1,43 +1,31 @@
 from django.urls import path
-from .views import (
-    EventListCreateView,
-    EventRetrieveUpdateDestroyView,
-    VenueListCreateView,
-    VenueRetrieveUpdateDestroyView,
-    SpeakerListCreateView,
-    SpeakerRetrieveUpdateDestroyView,
-    CategoryListCreateView,
-    TagListCreateView,
-    EventRegistrationView,
-    InvitationSendView,      # New
-    InvitationAcceptView,    # New
-    NotificationListView,    # New
-    NotificationMarkAsReadView, # New
-)
+from . import views
+
+app_name = 'events'
 
 urlpatterns = [
-    # Event endpoints
-    path('events/', EventListCreateView.as_view(), name='event-list-create'),
-    path('events/<slug:slug>/', EventRetrieveUpdateDestroyView.as_view(), name='event-detail'),
-    path('events/<slug:slug>/rsvp/', EventRegistrationView.as_view(), name='event-rsvp'),
-    
-    # Invitation endpoints
-    path('events/<slug:slug>/invite/', InvitationSendView.as_view(), name='send-invitation'),
-    path('invitations/accept/<uuid:token>/', InvitationAcceptView.as_view(), name='accept-invitation'),
-    
-    # Notification endpoints
-    path('notifications/', NotificationListView.as_view(), name='notification-list'),
-    path('notifications/<uuid:pk>/mark-read/', NotificationMarkAsReadView.as_view(), name='notification-mark-read'),
+    # Event URLs
+    path('', views.EventListCreateView.as_view(), name='event-list-create'),
+    path('<slug:slug>/', views.EventRetrieveUpdateDestroyView.as_view(), name='event-detail'),
+    path('<slug:slug>/register/', views.EventRegistrationView.as_view(), name='event-register'),
+    path('<slug:slug>/invitations/', views.InvitationSendView.as_view(), name='event-send-invitation'),
 
-    # Category and Tag endpoints
-    path('categories/', CategoryListCreateView.as_view(), name='category-list-create'),
-    path('tags/', TagListCreateView.as_view(), name='tag-list-create'),
+    # Invitation Accept URL (doesn't need to be nested under an event)
+    path('invitations/accept/<uuid:token>/', views.InvitationAcceptView.as_view(), name='invitation-accept'),
 
-    # Venue endpoints
-    path('venues/', VenueListCreateView.as_view(), name='venue-list-create'),
-    path('venues/<uuid:pk>/', VenueRetrieveUpdateDestroyView.as_view(), name='venue-detail'),
+    # Venue URLs
+    path('venues/', views.VenueListCreateView.as_view(), name='venue-list-create'),
+    path('venues/<int:pk>/', views.VenueRetrieveUpdateDestroyView.as_view(), name='venue-detail'),
 
-    # Speaker endpoints
-    path('speakers/', SpeakerListCreateView.as_view(), name='speaker-list-create'),
-    path('speakers/<uuid:pk>/', SpeakerRetrieveUpdateDestroyView.as_view(), name='speaker-detail'),
+    # Speaker URLs
+    path('speakers/', views.SpeakerListCreateView.as_view(), name='speaker-list-create'),
+    path('speakers/<int:pk>/', views.SpeakerRetrieveUpdateDestroyView.as_view(), name='speaker-detail'),
+
+    # Sponsor URLs
+    path('sponsors/', views.SponsorListCreateView.as_view(), name='sponsor-list-create'),
+    path('sponsors/<int:pk>/', views.SponsorRetrieveUpdateDestroyView.as_view(), name='sponsor-detail'),
+
+    # Category & Tag URLs
+    path('categories/', views.CategoryListCreateView.as_view(), name='category-list-create'),
+    path('tags/', views.TagListCreateView.as_view(), name='tag-list-create'),
 ]

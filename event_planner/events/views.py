@@ -2,11 +2,14 @@
 # including events, venues, speakers, sponsors, categories, tags,
 # registrations, invitations, and notifications.
 #
-from rest_framework import generics, status
+from rest_framework import generics, status, serializers
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework.permissions import IsAuthenticated, IsAuthenticatedOrReadOnly, AllowAny
 from rest_framework.exceptions import PermissionDenied, NotFound, ValidationError
+from drf_spectacular.utils import extend_schema, OpenApiResponse
+from drf_spectacular.types import OpenApiTypes
+
 from django.db.models import Q
 from django.utils import timezone
 
@@ -162,9 +165,20 @@ class EventRetrieveUpdateDestroyView(generics.RetrieveUpdateDestroyAPIView):
             raise PermissionDenied("You do not have permission to delete this event.")
 
 # --- Registration Views ---
+@extend_schema(
+    summary="Register for an Event",
+    description="Registers the authenticated user for a specific event.",
+    responses={
+        201: RegistrationSerializer,
+        404: OpenApiResponse(description="Event not found."),
+        409: OpenApiResponse(description="You are already registered for this event."),
+        403: OpenApiResponse(description="You do not have permission to register for this private event."),
+    },
+    tags=['Events']
+)
 class EventRegistrationView(APIView):
     permission_classes = [IsAuthenticated]
-
+    
     def post(self, request, slug, format=None):
         try:
             event = Event.objects.get(slug=slug)
@@ -233,9 +247,25 @@ class TagListCreateView(generics.ListCreateAPIView):
 
 
 # --- Invitation Views ---
+class InvitationRequestSerializer(serializers.Serializer):
+    email = serializers.EmailField(required=True, help_text="Email address of the user to invite.")
+
+@extend_schema(
+    summary="Send an Invitation",
+    description="Sends an invitation to a user's email to join a private event. Only the event organizer can perform this action.",
+    request=InvitationRequestSerializer,
+    responses={
+        202: InvitationSerializer,
+        400: OpenApiResponse(description="Bad Request (e.g., email missing, event is not private)."),
+        404: OpenApiResponse(description="Event not found."),
+        403: OpenApiResponse(description="You do not have permission to send invitations."),
+        409: OpenApiResponse(description="An invitation has already been sent to this email."),
+    },
+    tags=['Events']
+)
 class InvitationSendView(APIView):
     permission_classes = [IsAuthenticated]
-
+    
     def post(self, request, slug):
         try:
             event = Event.objects.get(slug=slug)
@@ -263,9 +293,19 @@ class InvitationSendView(APIView):
         serializer = InvitationSerializer(invitation)
         return Response(serializer.data, status=status.HTTP_202_ACCEPTED)
 
+@extend_schema(
+    summary="Accept an Invitation",
+    description="Accepts an event invitation using a unique token. This endpoint is public.",
+    request=None,
+    responses={
+        200: OpenApiResponse(description="Invitation accepted successfully."),
+        404: OpenApiResponse(description="Invalid or expired invitation token, or invitation already accepted."),
+    },
+    tags=['Events']
+)
 class InvitationAcceptView(APIView):
     permission_classes = [AllowAny]
-
+    
     def get(self, request, token):
         try:
             invitation = Invitation.objects.get(token=token, accepted=False)
@@ -294,9 +334,18 @@ class NotificationListView(generics.ListAPIView):
         # Only retrieve notifications for the authenticated user
         return Notification.objects.filter(user=self.request.user)
 
+@extend_schema(
+    summary="Mark Notification as Read",
+    description="Marks a specific notification as read for the authenticated user.",
+    request=None,
+    responses={
+        200: OpenApiResponse(description="Notification marked as read."),
+        404: OpenApiResponse(description="Notification not found or you don't have permission."),
+    },
+    tags=['Notifications']
+)
 class NotificationMarkAsReadView(APIView):
     permission_classes = [IsAuthenticated]
-
     def post(self, request, pk):
         try:
             notification = Notification.objects.get(pk=pk, user=request.user)

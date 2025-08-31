@@ -12,15 +12,11 @@ class UserRegistrationView(generics.CreateAPIView):
     permission_classes = [AllowAny]
 
 class UserProfileView(generics.RetrieveUpdateAPIView):
-    queryset = User.objects.all()
     serializer_class = UserSerializer
     permission_classes = [IsAuthenticated]
 
-    def get(self, request, *args, **kwargs):
-        return super().get(request, *args, **kwargs)
-    def get(self, request):
-        serializer = UserSerializer(request.user)
-        return Response(serializer.data)
+    def get_object(self):
+        return self.request.user
 
 class UserCreateView(generics.CreateAPIView):
     queryset = User.objects.all()
@@ -30,4 +26,3 @@ class UserDetailView(generics.RetrieveAPIView):
     queryset = User.objects.all()
     serializer_class = UserSerializer
     permission_classes = [IsAuthenticated]
-

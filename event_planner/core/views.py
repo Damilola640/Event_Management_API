@@ -2,7 +2,15 @@ from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework.permissions import AllowAny
 from rest_framework import status
+from drf_spectacular.utils import extend_schema
+from drf_spectacular.types import OpenApiTypes
 
+@extend_schema(
+    summary="API Health Check",
+    description="Checks the operational status of the API. Returns a simple JSON object indicating the API is running.",
+    responses={200: OpenApiTypes.OBJECT},
+    tags=['Health']
+)
 class HealthCheckView(APIView):
     """
     API view for a health check endpoint.
