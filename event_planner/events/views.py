@@ -48,6 +48,7 @@ class EventListCreateView(generics.ListCreateAPIView):
     serializer_class = EventSerializer
     permission_classes = [IsAuthenticatedOrReadOnly]
     pagination_class = StandardResultsSetPagination
+    ordering = ['-created_at'] # Add default ordering to prevent pagination warnings
 
     def get_queryset(self):
         queryset = Event.objects.all()
