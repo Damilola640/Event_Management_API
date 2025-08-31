@@ -3,6 +3,7 @@ from django.db import models
 from django.contrib.auth import get_user_model
 from django.utils.text import slugify
 from django.urls import reverse # For generating invitation links
+from django.core.exceptions import ValidationError
 from django.conf import settings # To access BASE_URL for invitation links
 
 User = get_user_model()
@@ -25,6 +26,26 @@ RSVP_STATUS_CHOICES = (
     ('not_going', 'Not Going'),
     ('maybe', 'Maybe'),
 )
+
+class SlugMixin(models.Model):
+    """
+    A mixin to automatically generate a unique slug for a model instance.
+    Assumes the model has a 'name' field and a 'slug' field.
+    """
+    def save(self, *args, **kwargs):
+        if not self.slug:
+            base_slug = slugify(self.name)
+            slug = base_slug
+            counter = 1
+            # Ensure the slug is unique by appending a number if it exists
+            while self.__class__.objects.filter(slug=slug).exists():
+                slug = f"{base_slug}-{counter}"
+                counter += 1
+            self.slug = slug
+        super().save(*args, **kwargs)
+
+    class Meta:
+        abstract = True
 
 class Venue(models.Model):
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
@@ -72,33 +93,23 @@ class Sponsor(models.Model):
     def __str__(self):
         return self.name
 
-class Category(models.Model):
+class Category(SlugMixin, models.Model):
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
     name = models.CharField(max_length=100, unique=True)
     slug = models.SlugField(max_length=100, unique=True, blank=True)
 
-    def save(self, *args, **kwargs):
-        if not self.slug:
-            self.slug = slugify(self.name)
-        super().save(*args, **kwargs)
-
     def __str__(self):
         return self.name
 
-class Tag(models.Model):
+class Tag(SlugMixin, models.Model):
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
     name = models.CharField(max_length=50, unique=True)
     slug = models.SlugField(max_length=50, unique=True, blank=True)
 
-    def save(self, *args, **kwargs):
-        if not self.slug:
-            self.slug = slugify(self.name)
-        super().save(*args, **kwargs)
-
     def __str__(self):
         return self.name
 
-class Event(models.Model):
+class Event(SlugMixin, models.Model):
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
     organizer = models.ForeignKey(User, on_delete=models.CASCADE, related_name='organized_events')
     venue = models.ForeignKey(Venue, on_delete=models.SET_NULL, related_name='events', blank=True, null=True)
@@ -122,9 +133,19 @@ class Event(models.Model):
     categories = models.ManyToManyField(Category, related_name='events')
     tags = models.ManyToManyField(Tag, related_name='events')
     
+    def clean(self):
+        """
+        Adds validation to ensure end date/time is after start date/time.
+        """
+        super().clean()
+        if self.start_date and self.end_date and self.end_date < self.start_date:
+            raise ValidationError({'end_date': 'End date cannot be before the start date.'})
+        
+        if self.start_date == self.end_date and self.end_time and self.start_time and self.end_time < self.start_time:
+            raise ValidationError({'end_time': 'End time cannot be before the start time on the same day.'})
+
     def save(self, *args, **kwargs):
-        if not self.slug:
-            self.slug = slugify(self.name)
+        self.full_clean()
         super().save(*args, **kwargs)
 
     def __str__(self):
@@ -137,6 +158,11 @@ class Event_Speaker(models.Model):
     presentation_start_time = models.DateTimeField(blank=True, null=True)
     presentation_end_time = models.DateTimeField(blank=True, null=True)
 
+    class Meta:
+        verbose_name = "Event Speaker"
+        verbose_name_plural = "Event Speakers"
+        unique_together = ('event', 'speaker')
+
     def __str__(self):
         return f"{self.event.name} - {self.speaker.first_name}"
 
@@ -147,6 +173,11 @@ class Event_Sponsor(models.Model):
     sponsorship_amount = models.DecimalField(max_digits=10, decimal_places=2, blank=True, null=True)
     start_date = models.DateField()
     end_date = models.DateField()
+    
+    class Meta:
+        verbose_name = "Event Sponsor"
+        verbose_name_plural = "Event Sponsors"
+        unique_together = ('event', 'sponsor')
     
     def __str__(self):
         return f"{self.event.name} - {self.sponsor.name}"
