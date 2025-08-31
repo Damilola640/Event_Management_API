@@ -10,9 +10,8 @@ click-repl==0.3.0
 cron_descriptor==2.0.5
 Django==5.2.5
 django-celery-beat==2.8.1
-django-cors-headers==4.7.0
+django-filter==25.1
 django-timezone-field==7.1
-django_celery_results==2.6.0
 djangorestframework==3.16.1
 djangorestframework_simplejwt==5.5.1
 drf-spectacular==0.28.0
@@ -27,10 +26,8 @@ python-crontab==3.3.0
 python-dateutil==2.9.0.post0
 python-dotenv==1.1.1
 PyYAML==6.0.2
-redis==6.4.0
 referencing==0.36.2
 rpds-py==0.27.1
-setuptools==80.9.0
 six==1.17.0
 sqlparse==0.5.3
 typing_extensions==4.15.0
@@ -38,4 +35,3 @@ tzdata==2025.2
 uritemplate==4.2.0
 vine==5.1.0
 wcwidth==0.2.13
-wheel==0.45.1
