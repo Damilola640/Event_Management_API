@@ -16,11 +16,15 @@ def send_invitation_email_task(invitation_id):
     try:
         invitation = Invitation.objects.get(id=invitation_id)
         event = invitation.event
-        
+
+        # Construct the full URL here, which is better practice
+        base_url = getattr(settings, 'BASE_URL', 'http://localhost:8000')
+        invitation_link = f"{base_url}{invitation.get_absolute_url()}"
+
         subject = f"You're invited to {event.name}!"
         html_message = render_to_string('events/invitation_email.html', {
             'event': event,
-            'invitation_link': invitation.get_absolute_url(),
+            'invitation_link': invitation_link,
             'invited_by': invitation.invited_by.username if invitation.invited_by else 'An organizer'
         })
         plain_message = strip_tags(html_message)

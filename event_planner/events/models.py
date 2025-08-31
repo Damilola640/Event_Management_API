@@ -181,10 +181,9 @@ class Invitation(models.Model):
         unique_together = ('event', 'email') # A specific email can only be invited once per event
 
     def get_absolute_url(self):
-        """Generates the full URL for accepting the invitation."""
-        # You'll need to define BASE_URL in your settings for this to work in production
-        base_url = getattr(settings, 'BASE_URL', 'http://localhost:8000')
-        return f"{base_url}{reverse('accept-invitation', kwargs={'token': self.token})}"
+        """Generates the path for accepting the invitation. The full URL is constructed in the task."""
+        # The URL name is 'invitation-accept' and it's in the 'events' namespace.
+        return reverse('events:invitation-accept', kwargs={'token': self.token})
 
     def __str__(self):
         return f"Invitation for {self.email} to {self.event.name}"
