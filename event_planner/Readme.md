@@ -66,8 +66,8 @@ Follow these instructions to get the project up and running on your local machin
 
     Authentication: [JWT, OAuth 2.0]
 ```bash
-git clone https://github.com/Damilola640/Event_Management-API.git
-cd Event_Management-API/event_planner
+git clone https://github.com/Damilola640/Event_Management_API.git
+cd Event_Management_API/event_planner
 ```
 
 API Endpoints
@@ -201,7 +201,7 @@ Getting Started
 Once the server is running, you can access the interactive API documentation:
 
     Clone the repository:
-    git clone [git@github.com:Damilola640/Event_Management-API.git]
+    git clone [git@github.com:Damilola640/Event_Management_API.git]
 *   **Swagger UI**: `http://127.0.0.1:8000/api/docs/`
 *   **ReDoc**: `http://127.0.0.1:8000/api/redoc/`
 
