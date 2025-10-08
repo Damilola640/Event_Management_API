@@ -31,7 +31,7 @@ DEBUG = config('DEBUG', default=False, cast=bool)
 # Combined all default hosts into a single comma-separated string
 default_hosts = 'eventflow-b919.onrender.com,127.0.0.1,localhost'
 
-ALLOWED_HOSTS = config('ALLOWED_HOSTS', default=default_hosts, cast=Csv()).split(',')
+ALLOWED_HOSTS = config('ALLOWED_HOSTS', default=default_hosts, cast=Csv())
 # Application definition
 
 INSTALLED_APPS = [
