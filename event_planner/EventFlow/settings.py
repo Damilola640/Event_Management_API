@@ -28,10 +28,10 @@ SECRET_KEY = config('SECRET_KEY')
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = config('DEBUG', default=False, cast=bool)
 
-# Combined all default hosts into a single comma-separated string
-default_hosts = 'eventflow-b919.onrender.com,127.0.0.1,localhost'
+# Combined all default hosts into a list of strings
+default_hosts = ['eventflow-b919.onrender.com', '127.0.0.1', 'localhost']
 
-ALLOWED_HOSTS = config('ALLOWED_HOSTS', default=default_hosts, cast=Csv())
+ALLOWED_HOSTS = config('ALLOWED_HOSTS', default=",".join(default_hosts), cast=Csv())
 # Application definition
 
 INSTALLED_APPS = [
