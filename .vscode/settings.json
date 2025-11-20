@@ -1,5 +1,7 @@
 {
     "python-envs.pythonProjects": [],
     "python-envs.defaultEnvManager": "ms-python.python:system",
-    "python.defaultInterpreterPath": "myenv/bin/python"
+    "python.defaultInterpreterPath": "myenv/bin/python",
+    "python.terminal.useEnvFile": true,
+    "python.envFile": "${workspaceFolder}/.github/.env"
 }
