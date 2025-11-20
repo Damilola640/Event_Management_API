@@ -1,6 +1,10 @@
 # Environment variables
 # Never commit your .env file!
 .env
+node_modules
+dists
+.vscode
+.DS_Store
 .env.*
 !.env.example
 
