@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import api from "../services/api";
-import { Eventitem } from "../  types";
+import type { Eventitem } from "../types";
 
 const EventList: React.FC = () => {
     const [events, setEvents] = useState<Eventitem[]>([]);

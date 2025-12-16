@@ -1,10 +1,10 @@
-import React, { useState } from "react";
+import React, { useState, useContext } from "react";
 import { useNavigate, useLocation, Link } from "react-router-dom";
 import api from "../services/api";
-import { useAuth } from "../services/AuthContext";
+import { AuthContext } from "../services/AuthContext";
 
 const LoginPage: React.FC = () => {
-    const setToken = useAuth().setToken;
+    const { setToken } = useContext(AuthContext) as { setToken: (token: string) => void };
     const [email, setEmail] = useState("");
     const [password, setPassword] = useState("");
     const [error, setError] = useState<string | null>(null);
