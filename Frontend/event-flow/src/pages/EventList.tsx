@@ -1,3 +1,4 @@
+import { isAxiosError } from "axios";
 import React, { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import api from "../services/api";
@@ -17,7 +18,7 @@ const EventList: React.FC = () => {
                 if (!cancelled) {
                     setEvents(response.data);
                 }
-            } catch (err: any) {
+            } catch (err: unknown) {
                 if (!cancelled) {
                     setError(err?.response?.data?.message || "Failed to fetch events");
                 } 
