@@ -160,7 +160,7 @@ async function loadEvents() {
 
   // ── Swap this block with your real API call ───────────
   // Example:
-  // const res   = await fetch('https://your-api.com/api/events?limit=3&status=published');
+  // const res   = await fetch('https://eventflow-b919.onrender.com/api/events?limit=3&status=published');
   // const data  = await res.json();
   // const events = data.events;
   //
@@ -215,7 +215,7 @@ function initLoginForm() {
 
     try {
       // ── Replace with your API ──
-      // const res  = await fetch('https://your-api.com/api/auth/login', {
+      // const res  = await fetch('https://eventflow-b919.onrender.com/api/auth/login', {
       //   method: 'POST',
       //   headers: { 'Content-Type': 'application/json' },
       //   body: JSON.stringify({ email, password }),
@@ -262,7 +262,7 @@ function initRegisterForm() {
 
     try {
       // ── Replace with your API ──
-      // const res  = await fetch('https://your-api.com/api/auth/register', {
+      // const res  = await fetch('https://eventflow-b919.onrender.com/api/auth/register', {
       //   method: 'POST',
       //   headers: { 'Content-Type': 'application/json' },
       //   body: JSON.stringify({ name, email, password }),
@@ -311,7 +311,7 @@ function initBookingForm() {
     try {
       // ── Replace with your API ──
       // const token = localStorage.getItem('token');
-      // const res   = await fetch('https://your-api.com/api/rsvp', {
+      // const res   = await fetch('https://eventflow-b919.onrender.com/api/rsvp', {
       //   method: 'POST',
       //   headers: {
       //     'Content-Type': 'application/json',
