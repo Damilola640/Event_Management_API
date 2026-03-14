@@ -1,0 +1,374 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="description" content="Create, publish, and sell tickets to unforgettable events — all from one elegant platform built for modern organizers." />
+  <title>Eventflow — Events, Simplified</title>
+
+  <!-- Stylesheets -->
+  <link rel="stylesheet" href="css/variables.css" />
+  <link rel="stylesheet" href="css/navbar.css" />
+  <link rel="stylesheet" href="css/hero.css" />
+  <link rel="stylesheet" href="css/sections.css" />
+  <link rel="stylesheet" href="css/components.css" />
+</head>
+<body>
+
+  <!-- Custom Cursor -->
+  <div id="cursor" aria-hidden="true"></div>
+
+  <!-- ── NAVBAR ── -->
+  <nav class="navbar" role="navigation" aria-label="Main navigation">
+    <a href="index.html" class="nav-logo">event<span>flow</span></a>
+
+    <ul class="nav-links" role="list">
+      <li><a href="#features">Features</a></li>
+      <li><a href="#how">How it works</a></li>
+      <li><a href="#events">Events</a></li>
+      <li><a href="#pricing">Pricing</a></li>
+    </ul>
+
+    <div class="nav-actions">
+      <a href="pages/auth.html" class="nav-signin">Sign in</a>
+      <a href="pages/auth.html" class="nav-cta">Get started free</a>
+      <button id="hamburger" class="nav-hamburger" aria-label="Toggle menu" aria-expanded="false">
+        <span></span><span></span><span></span>
+      </button>
+    </div>
+  </nav>
+
+  <!-- Mobile Menu -->
+  <div id="mobile-menu" class="nav-mobile-menu" role="menu">
+    <a href="#features" role="menuitem">Features</a>
+    <a href="#how" role="menuitem">How it works</a>
+    <a href="#events" role="menuitem">Events</a>
+    <a href="#pricing" role="menuitem">Pricing</a>
+    <a href="pages/auth.html" role="menuitem">Sign in</a>
+  </div>
+
+  <main>
+
+    <!-- ── HERO ── -->
+    <section class="hero" aria-label="Hero section">
+      <div class="hero-bg-shape" aria-hidden="true"></div>
+      <div class="hero-bg-shape2" aria-hidden="true"></div>
+
+      <div class="hero-left">
+        <div class="hero-tag">
+          <span class="dot" aria-hidden="true"></span>
+          Now live in Nigeria &amp; across Africa
+        </div>
+
+        <h1 class="hero-h1">
+          Events that<br>
+          <em>move people.</em><br>
+          <span>Managed simply.</span>
+        </h1>
+
+        <p class="hero-sub">
+          Create, publish, and sell tickets to unforgettable events — all from one elegant platform built for modern organizers.
+        </p>
+
+        <div class="hero-actions">
+          <a href="pages/auth.html" class="btn-primary">Start for free</a>
+          <a href="#events" class="btn-ghost">Browse events <span class="arrow">→</span></a>
+        </div>
+      </div>
+
+      <!-- Floating Card Stack -->
+      <div class="hero-right" aria-hidden="true">
+        <div class="hero-card-stack">
+          <div class="hcard hcard-back2">
+            <div class="hcard-label">Workshop</div>
+            <div class="hcard-title">Design Thinking Bootcamp</div>
+          </div>
+          <div class="hcard hcard-back">
+            <div class="hcard-label">Concert</div>
+            <div class="hcard-title">Afrobeat Night Out</div>
+            <span class="hcard-badge hcard-badge-amber">Almost full</span>
+          </div>
+          <div class="hcard hcard-main">
+            <div class="hcard-label">Conference · Lagos</div>
+            <div class="hcard-title">Lagos Tech Summit 2026</div>
+            <div class="hcard-meta">📍 Landmark Centre &nbsp;·&nbsp; Mar 20, 2026</div>
+            <div class="hcard-bar-wrap">
+              <div class="hcard-bar" style="width:72%"></div>
+            </div>
+            <div class="hcard-stat-row">
+              <span>360 tickets sold</span><span>72% full</span>
+            </div>
+            <div class="hcard-footer">
+              <span class="hcard-badge">Published ✓</span>
+              <div class="hcard-avatars">
+                <div class="hcard-avatar" style="background:#E6F1FB;color:#185FA5">CO</div>
+                <div class="hcard-avatar" style="background:#faeeda;color:#854F0B">TA</div>
+                <div class="hcard-avatar" style="background:#eaf3de;color:#3B6D11">AN</div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ── STATS BAR ── -->
+    <div class="stats-bar" role="region" aria-label="Platform statistics">
+      <div class="stat-item reveal">
+        <div class="stat-num"><span id="stat-events">0</span></div>
+        <div class="stat-desc">Events organized</div>
+      </div>
+      <div class="stat-item reveal reveal-d1">
+        <div class="stat-num"><span id="stat-tickets">0</span></div>
+        <div class="stat-desc">Tickets sold</div>
+      </div>
+      <div class="stat-item reveal reveal-d2">
+        <div class="stat-num"><span id="stat-uptime">0</span></div>
+        <div class="stat-desc">Uptime guaranteed</div>
+      </div>
+      <div class="stat-item reveal reveal-d3">
+        <div class="stat-num"><span id="stat-cities">0</span></div>
+        <div class="stat-desc">Cities reached</div>
+      </div>
+    </div>
+
+    <!-- ── FEATURES ── -->
+    <section class="features" id="features" aria-label="Features">
+      <span class="section-tag reveal">Everything you need</span>
+      <h2 class="section-h2 reveal">Built for serious<br>event organizers</h2>
+      <p class="section-sub reveal">From intimate workshops to stadium concerts — Evently gives you the tools to pull it off flawlessly.</p>
+
+      <div class="features-grid">
+        <div class="feat reveal">
+          <div class="feat-icon feat-icon-orange" aria-hidden="true">🗓</div>
+          <h3>Smart event creation</h3>
+          <p>Create detailed event listings with rich descriptions, custom categories, capacity settings, and scheduled publishing in minutes.</p>
+          <span class="feat-accent" aria-hidden="true">Explore →</span>
+        </div>
+        <div class="feat reveal reveal-d1">
+          <div class="feat-icon feat-icon-dark" aria-hidden="true">🎟</div>
+          <h3>Ticket &amp; RSVP management</h3>
+          <p>Sell tickets, manage RSVPs, approve or cancel bookings — all with real-time capacity tracking and automated confirmations.</p>
+          <span class="feat-accent" aria-hidden="true">Explore →</span>
+        </div>
+        <div class="feat reveal reveal-d2">
+          <div class="feat-icon feat-icon-gold" aria-hidden="true">📊</div>
+          <h3>Live analytics dashboard</h3>
+          <p>Track ticket sales, revenue, RSVP rates, and attendee demographics in real time from a clean, intuitive admin panel.</p>
+          <span class="feat-accent" aria-hidden="true">Explore →</span>
+        </div>
+        <div class="feat reveal reveal-d3">
+          <div class="feat-icon feat-icon-green" aria-hidden="true">🔐</div>
+          <h3>Secure auth &amp; roles</h3>
+          <p>Role-based access control for your whole team. Organizers, staff, and admins each get exactly the permissions they need.</p>
+          <span class="feat-accent" aria-hidden="true">Explore →</span>
+        </div>
+      </div>
+    </section>
+
+    <!-- ── HOW IT WORKS ── -->
+    <section class="how" id="how" aria-label="How it works">
+      <div class="how-inner">
+        <div class="how-header">
+          <span class="section-tag reveal">Simple process</span>
+          <h2 class="section-h2 reveal">Up and running<br>in three steps</h2>
+        </div>
+        <div class="steps">
+          <div class="step reveal">
+            <div class="step-num" aria-hidden="true">1</div>
+            <h3>Create your event</h3>
+            <p>Fill out your event details — title, venue, date, ticket price, and capacity. Publish instantly or schedule for later.</p>
+          </div>
+          <div class="step reveal reveal-d1">
+            <div class="step-num alt" aria-hidden="true">2</div>
+            <h3>Share &amp; sell tickets</h3>
+            <p>Your event gets a shareable link and a live ticket page. Attendees RSVP or purchase — you get notified in real time.</p>
+          </div>
+          <div class="step reveal reveal-d2">
+            <div class="step-num" aria-hidden="true">3</div>
+            <h3>Manage &amp; analyze</h3>
+            <p>Approve RSVPs, track sales, communicate with attendees, and review performance analytics — all from one dashboard.</p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ── EVENTS SHOWCASE ── -->
+    <section class="showcase" id="events" aria-label="Featured events">
+      <div class="showcase-header">
+        <div>
+          <span class="section-tag reveal">Live on Evently</span>
+          <h2 class="section-h2 reveal">Trending events</h2>
+        </div>
+        <a href="#" class="btn-ghost showcase-view-all reveal">See all events <span class="arrow">→</span></a>
+      </div>
+      <!-- Populated by JS -->
+      <div class="showcase-cards" id="events-container">
+        <p style="color:rgba(255,255,255,0.4);font-size:0.9rem">Loading events…</p>
+      </div>
+    </section>
+
+    <!-- ── TESTIMONIALS ── -->
+    <section class="testimonials" aria-label="Testimonials">
+      <span class="section-tag reveal">Real organizers</span>
+      <h2 class="section-h2 reveal">Loved by event creators<br>across Africa</h2>
+
+      <div class="testi-grid">
+        <div class="testi-card reveal">
+          <div class="testi-stars" aria-label="5 stars">★★★★★</div>
+          <p class="testi-quote">"Evently completely changed how we manage our annual tech conference. The dashboard is clean and intuitive — our team adopted it instantly."</p>
+          <div class="testi-author">
+            <div class="testi-avatar" style="background:#E6F1FB;color:#185FA5" aria-hidden="true">CO</div>
+            <div>
+              <div class="testi-name">Chioma Obi</div>
+              <div class="testi-role">CEO, TechPulse Lagos</div>
+            </div>
+          </div>
+        </div>
+        <div class="testi-card reveal reveal-d1">
+          <div class="testi-stars" aria-label="5 stars">★★★★★</div>
+          <p class="testi-quote">"We sold out our concert in 48 hours. The ticket management and RSVP approval flow is exactly what we needed — no technical headaches."</p>
+          <div class="testi-author">
+            <div class="testi-avatar" style="background:#faeeda;color:#854F0B" aria-hidden="true">TA</div>
+            <div>
+              <div class="testi-name">Tunde Adeyemi</div>
+              <div class="testi-role">Event Director, Afrovibes</div>
+            </div>
+          </div>
+        </div>
+        <div class="testi-card reveal reveal-d2">
+          <div class="testi-stars" aria-label="5 stars">★★★★★</div>
+          <p class="testi-quote">"The analytics alone make it worth it. I can see ticket sales in real time, which helps me make smarter decisions during the campaign."</p>
+          <div class="testi-author">
+            <div class="testi-avatar" style="background:#eaf3de;color:#3B6D11" aria-hidden="true">AN</div>
+            <div>
+              <div class="testi-name">Amaka Nwosu</div>
+              <div class="testi-role">Founder, CreativeHub Abuja</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ── PRICING ── -->
+    <section class="pricing" id="pricing" aria-label="Pricing plans">
+      <div class="pricing-header">
+        <span class="section-tag reveal">Simple pricing</span>
+        <h2 class="section-h2 reveal">No surprises. Ever.</h2>
+        <p class="section-sub reveal">Start free, scale as you grow. All plans include core event creation and ticket management.</p>
+      </div>
+
+      <div class="pricing-grid">
+        <!-- Starter -->
+        <div class="price-card reveal">
+          <div class="price-plan">Starter</div>
+          <div class="price-amount">Free</div>
+          <div class="price-period">Forever, no card required</div>
+          <ul class="price-features">
+            <li>Up to 3 events/month</li>
+            <li>100 tickets per event</li>
+            <li>Basic analytics</li>
+            <li>Email confirmations</li>
+            <li>Public event page</li>
+          </ul>
+          <a href="pages/auth.html" class="price-cta">Get started free</a>
+        </div>
+
+        <!-- Pro -->
+        <div class="price-card featured reveal reveal-d1">
+          <span class="price-badge">Most popular</span>
+          <div class="price-plan">Professional</div>
+          <div class="price-amount">₦12,500</div>
+          <div class="price-period">per month, billed annually</div>
+          <ul class="price-features">
+            <li>Unlimited events</li>
+            <li>Unlimited tickets</li>
+            <li>Full analytics dashboard</li>
+            <li>RSVP approval workflow</li>
+            <li>Team access (5 seats)</li>
+            <li>Custom event branding</li>
+          </ul>
+          <a href="pages/auth.html" class="price-cta featured-cta">Start free trial</a>
+        </div>
+
+        <!-- Enterprise -->
+        <div class="price-card reveal reveal-d2">
+          <div class="price-plan">Enterprise</div>
+          <div class="price-amount">Custom</div>
+          <div class="price-period">Contact us for a quote</div>
+          <ul class="price-features">
+            <li>Everything in Pro</li>
+            <li>Dedicated support</li>
+            <li>Custom integrations</li>
+            <li>SLA guarantee</li>
+            <li>Unlimited team seats</li>
+            <li>On-premise option</li>
+          </ul>
+          <a href="mailto:sales@evently.co" class="price-cta">Talk to sales</a>
+        </div>
+      </div>
+    </section>
+
+    <!-- ── CTA BANNER ── -->
+    <div class="cta-section">
+      <div class="cta-banner reveal">
+        <div class="cta-bg1" aria-hidden="true"></div>
+        <div class="cta-bg2" aria-hidden="true"></div>
+        <div class="cta-text">
+          <h2 class="cta-h2">Ready to host your<br>next great event?</h2>
+          <p class="cta-sub">Join thousands of organizers already using Evently.</p>
+        </div>
+        <a href="pages/auth.html" class="cta-btn">Create your first event →</a>
+      </div>
+    </div>
+
+  </main>
+
+  <!-- ── FOOTER ── -->
+  <footer role="contentinfo">
+    <div class="footer-top">
+      <div class="footer-brand">
+        <a href="index.html" class="footer-logo">event<span>ly</span></a>
+        <p>The modern platform for creating, managing, and selling tickets to events across Africa and beyond.</p>
+      </div>
+      <div class="footer-col">
+        <h4>Product</h4>
+        <ul>
+          <li><a href="#features">Features</a></li>
+          <li><a href="#pricing">Pricing</a></li>
+          <li><a href="#">Changelog</a></li>
+          <li><a href="#">Roadmap</a></li>
+        </ul>
+      </div>
+      <div class="footer-col">
+        <h4>Company</h4>
+        <ul>
+          <li><a href="#">About</a></li>
+          <li><a href="#">Blog</a></li>
+          <li><a href="#">Careers</a></li>
+          <li><a href="#">Contact</a></li>
+        </ul>
+      </div>
+      <div class="footer-col">
+        <h4>Legal</h4>
+        <ul>
+          <li><a href="#">Privacy</a></li>
+          <li><a href="#">Terms</a></li>
+          <li><a href="#">Cookies</a></li>
+          <li><a href="#">Refunds</a></li>
+        </ul>
+      </div>
+    </div>
+    <div class="footer-bottom">
+      <span class="footer-copy">© 2026 Evently. All rights reserved.</span>
+      <div class="footer-socials">
+        <a href="#">Twitter</a>
+        <a href="#">Instagram</a>
+        <a href="#">LinkedIn</a>
+        <a href="#">WhatsApp</a>
+      </div>
+    </div>
+  </footer>
+
+  <script src="js/evently.js"></script>
+</body>
+</html>

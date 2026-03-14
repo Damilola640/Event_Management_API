@@ -1,0 +1,80 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Sign In — Evently</title>
+  <link rel="stylesheet" href="../css/variables.css" />
+  <link rel="stylesheet" href="../css/navbar.css" />
+  <link rel="stylesheet" href="../css/auth.css" />
+</head>
+<body>
+
+  <div id="cursor" aria-hidden="true"></div>
+
+  <nav class="navbar" role="navigation">
+    <a href="../index.html" class="nav-logo">event<span>ly</span></a>
+    <div class="nav-actions">
+      <a href="../index.html" class="nav-signin">← Back to home</a>
+    </div>
+  </nav>
+
+  <main class="auth-main">
+    <div class="auth-card">
+      <div class="auth-logo">event<span>ly</span></div>
+      <p class="auth-tagline">Your events, beautifully managed.</p>
+
+      <!-- Tabs -->
+      <div class="auth-tabs" role="tablist">
+        <button class="auth-tab active" data-tab="login" role="tab" aria-selected="true">Sign in</button>
+        <button class="auth-tab" data-tab="register" role="tab" aria-selected="false">Register</button>
+      </div>
+
+      <!-- Login Panel -->
+      <div class="auth-panel active" data-panel="login" role="tabpanel">
+        <form id="login-form" novalidate>
+          <div class="form-group">
+            <label for="login-email">Email address</label>
+            <input type="email" id="login-email" name="email" placeholder="you@example.com" required autocomplete="email" />
+          </div>
+          <div class="form-group">
+            <label for="login-password">Password</label>
+            <input type="password" id="login-password" name="password" placeholder="••••••••" required autocomplete="current-password" />
+          </div>
+          <p id="login-error" class="form-error" role="alert"></p>
+          <button type="submit" class="btn-primary form-submit">Sign in</button>
+          <p class="form-footer"><a href="#">Forgot your password?</a></p>
+        </form>
+      </div>
+
+      <!-- Register Panel -->
+      <div class="auth-panel" data-panel="register" role="tabpanel">
+        <form id="register-form" novalidate>
+          <div class="form-group">
+            <label for="reg-name">Full name</label>
+            <input type="text" id="reg-name" name="name" placeholder="Your name" required autocomplete="name" />
+          </div>
+          <div class="form-group">
+            <label for="reg-email">Email address</label>
+            <input type="email" id="reg-email" name="email" placeholder="you@example.com" required autocomplete="email" />
+          </div>
+          <div class="form-group">
+            <label for="reg-password">Password</label>
+            <input type="password" id="reg-password" name="password" placeholder="Min. 8 characters" required autocomplete="new-password" />
+          </div>
+          <div class="form-group">
+            <label for="reg-confirm">Confirm password</label>
+            <input type="password" id="reg-confirm" name="confirm" placeholder="Repeat password" required autocomplete="new-password" />
+          </div>
+          <p id="register-error" class="form-error" role="alert"></p>
+          <button type="submit" class="btn-primary form-submit">Create account</button>
+          <p class="form-footer">By signing up you agree to our <a href="#">Terms</a> &amp; <a href="#">Privacy Policy</a>.</p>
+        </form>
+      </div>
+
+    </div>
+  </main>
+
+  <script src="../js/evently.js"></script>
+</body>
+</html>
