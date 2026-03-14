@@ -1,0 +1,21 @@
+.section { padding: 7rem 3rem; background: var(--white); }
+.grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 1.5rem; margin-top: 3.5rem; }
+.card {
+  border: 1px solid var(--cream-darker); border-radius: 1.25rem;
+  padding: 1.75rem; transition: box-shadow 0.25s;
+}
+.card:hover { box-shadow: 0 8px 40px rgba(14,13,12,0.06); }
+.stars { color: var(--gold); font-size: 0.9rem; margin-bottom: 1rem; letter-spacing: 2px; }
+.quote {
+  font-family: var(--font-display); font-size: 1rem; font-style: italic;
+  line-height: 1.65; color: var(--ink); margin-bottom: 1.5rem; font-weight: 400;
+}
+.author { display: flex; align-items: center; gap: 0.75rem; }
+.avatar {
+  width: 38px; height: 38px; border-radius: 50%;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 0.8rem; font-weight: 600; flex-shrink: 0;
+}
+.name { font-size: 0.875rem; font-weight: 500; }
+.role { font-size: 0.75rem; color: var(--ink-faint); }
+@media (max-width: 768px) { .section { padding: 4rem 1.25rem; } .grid { grid-template-columns: 1fr; } }

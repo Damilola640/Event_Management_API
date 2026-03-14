@@ -1,0 +1,928 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Eventflow — Events, Simplified</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,700;0,900;1,400;1,700&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet" />
+
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --ink: #0e0d0c;
+      --ink-muted: #5a5751;
+      --ink-faint: #a09c97;
+      --cream: #f5f0e8;
+      --cream-dark: #ede7d9;
+      --cream-darker: #e0d9ce;
+      --accent: #c8522a;
+      --accent-light: #f0d5c8;
+      --accent-dark: #9e3e1d;
+      --gold: #c8972a;
+      --white: #fdfcfa;
+      --font-display: 'Playfair Display', Georgia, serif;
+      --font-body: 'DM Sans', sans-serif;
+    }
+
+    html { scroll-behavior: smooth; }
+
+    body {
+      font-family: var(--font-body);
+      background: var(--cream);
+      color: var(--ink);
+      overflow-x: hidden;
+      cursor: none;
+    }
+
+    /* Custom cursor */
+    .cursor {
+      width: 12px; height: 12px;
+      background: var(--accent);
+      border-radius: 50%;
+      position: fixed;
+      top: 0; left: 0;
+      pointer-events: none;
+      z-index: 9999;
+      transform: translate(-50%, -50%);
+      transition: transform 0.1s, width 0.2s, height 0.2s, background 0.2s;
+      mix-blend-mode: multiply;
+    }
+    .cursor.expand { width: 40px; height: 40px; background: var(--accent-light); }
+
+    /* NAV */
+    nav {
+      position: fixed; top: 0; left: 0; right: 0; z-index: 100;
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 1.25rem 3rem;
+      backdrop-filter: blur(12px);
+      background: rgba(245, 240, 232, 0.85);
+      border-bottom: 1px solid transparent;
+      transition: border-color 0.3s, padding 0.3s;
+    }
+    nav.scrolled { border-bottom-color: var(--cream-darker); padding: 0.9rem 3rem; }
+    .nav-logo {
+      font-family: var(--font-display);
+      font-weight: 900; font-size: 1.5rem;
+      color: var(--ink); letter-spacing: -0.02em;
+      text-decoration: none;
+    }
+    .nav-logo span { color: var(--accent); font-style: italic; }
+    .nav-links { display: flex; align-items: center; gap: 2rem; list-style: none; }
+    .nav-links a {
+      font-size: 0.875rem; font-weight: 400;
+      color: var(--ink-muted); text-decoration: none;
+      letter-spacing: 0.01em;
+      transition: color 0.2s;
+    }
+    .nav-links a:hover { color: var(--ink); }
+    .nav-cta {
+      background: var(--ink); color: var(--cream);
+      padding: 0.6rem 1.4rem; border-radius: 2rem;
+      font-size: 0.875rem; font-weight: 500;
+      text-decoration: none;
+      transition: background 0.2s, transform 0.15s;
+      display: inline-block;
+    }
+    .nav-cta:hover { background: var(--accent); transform: translateY(-1px); }
+
+    /* HERO */
+    .hero {
+      min-height: 100vh;
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      align-items: center;
+      padding: 8rem 3rem 4rem;
+      position: relative;
+      overflow: hidden;
+    }
+    .hero-bg-shape {
+      position: absolute; right: -8rem; top: -8rem;
+      width: 700px; height: 700px;
+      background: radial-gradient(circle, var(--accent-light) 0%, transparent 70%);
+      border-radius: 50%;
+      opacity: 0.5;
+      animation: float 8s ease-in-out infinite;
+    }
+    .hero-bg-shape2 {
+      position: absolute; left: 20%; bottom: -10rem;
+      width: 400px; height: 400px;
+      background: radial-gradient(circle, var(--gold) 0%, transparent 70%);
+      border-radius: 50%;
+      opacity: 0.15;
+      animation: float 11s ease-in-out infinite reverse;
+    }
+    @keyframes float {
+      0%, 100% { transform: translateY(0) scale(1); }
+      50% { transform: translateY(-30px) scale(1.04); }
+    }
+    .hero-left { position: relative; z-index: 2; }
+    .hero-tag {
+      display: inline-flex; align-items: center; gap: 8px;
+      font-size: 0.8rem; font-weight: 500; letter-spacing: 0.08em;
+      text-transform: uppercase; color: var(--accent);
+      border: 1px solid var(--accent-light);
+      background: var(--white);
+      padding: 0.35rem 0.9rem; border-radius: 2rem;
+      margin-bottom: 1.5rem;
+      animation: fadeUp 0.6s ease both;
+    }
+    .hero-tag .dot { width: 6px; height: 6px; background: var(--accent); border-radius: 50%; animation: pulse 2s infinite; }
+    @keyframes pulse { 0%,100%{opacity:1;transform:scale(1)} 50%{opacity:0.5;transform:scale(1.4)} }
+    .hero-h1 {
+      font-family: var(--font-display);
+      font-size: clamp(3rem, 5vw, 5rem);
+      font-weight: 900; line-height: 1.05;
+      letter-spacing: -0.03em; color: var(--ink);
+      margin-bottom: 1.5rem;
+      animation: fadeUp 0.6s 0.1s ease both;
+    }
+    .hero-h1 em { color: var(--accent); font-style: italic; }
+    .hero-h1 .line2 { display: block; }
+    .hero-sub {
+      font-size: 1.05rem; font-weight: 300; line-height: 1.7;
+      color: var(--ink-muted); max-width: 440px;
+      margin-bottom: 2.5rem;
+      animation: fadeUp 0.6s 0.2s ease both;
+    }
+    .hero-actions {
+      display: flex; align-items: center; gap: 1rem;
+      animation: fadeUp 0.6s 0.3s ease both;
+    }
+    .btn-primary {
+      background: var(--accent); color: var(--white);
+      padding: 0.85rem 2rem; border-radius: 2rem;
+      font-size: 0.95rem; font-weight: 500;
+      text-decoration: none; display: inline-block;
+      transition: background 0.2s, transform 0.15s, box-shadow 0.2s;
+      box-shadow: 0 4px 20px rgba(200,82,42,0.3);
+    }
+    .btn-primary:hover { background: var(--accent-dark); transform: translateY(-2px); box-shadow: 0 8px 30px rgba(200,82,42,0.35); }
+    .btn-ghost {
+      color: var(--ink); font-size: 0.95rem; font-weight: 400;
+      text-decoration: none; display: inline-flex; align-items: center; gap: 6px;
+      padding: 0.85rem 1.5rem;
+      border-radius: 2rem; border: 1px solid var(--cream-darker);
+      background: var(--white);
+      transition: border-color 0.2s, transform 0.15s;
+    }
+    .btn-ghost:hover { border-color: var(--ink-muted); transform: translateY(-2px); }
+    .btn-ghost .arrow { transition: transform 0.2s; }
+    .btn-ghost:hover .arrow { transform: translateX(4px); }
+
+    .hero-right {
+      position: relative; z-index: 2;
+      display: flex; align-items: center; justify-content: center;
+      animation: fadeUp 0.7s 0.25s ease both;
+    }
+    .hero-card-stack { position: relative; width: 340px; height: 440px; }
+    .hcard {
+      position: absolute;
+      background: var(--white);
+      border-radius: 1.25rem;
+      border: 1px solid var(--cream-darker);
+      padding: 1.25rem;
+      box-shadow: 0 8px 40px rgba(14,13,12,0.08);
+    }
+    .hcard-main {
+      width: 300px; bottom: 0; left: 50%; transform: translateX(-50%);
+      animation: cardFloat 7s ease-in-out infinite;
+    }
+    .hcard-back {
+      width: 260px; top: 0; right: -10px;
+      transform: rotate(6deg);
+      background: var(--cream-dark);
+      animation: cardFloat 7s 2s ease-in-out infinite;
+    }
+    .hcard-back2 {
+      width: 240px; top: 20px; left: -20px;
+      transform: rotate(-5deg);
+      background: var(--accent-light);
+      border-color: transparent;
+      animation: cardFloat 7s 4s ease-in-out infinite;
+    }
+    @keyframes cardFloat {
+      0%,100%{transform: translateX(-50%) translateY(0)} 50%{transform: translateX(-50%) translateY(-12px)}
+    }
+    @keyframes cardFloat2 {
+      0%,100%{transform: rotate(6deg) translateY(0)} 50%{transform: rotate(6deg) translateY(-8px)}
+    }
+    @keyframes cardFloat3 {
+      0%,100%{transform: rotate(-5deg) translateY(0)} 50%{transform: rotate(-5deg) translateY(-10px)}
+    }
+    .hcard-back { animation: cardFloat2 7s 2s ease-in-out infinite; }
+    .hcard-back2 { animation: cardFloat3 7s 4s ease-in-out infinite; }
+    .hcard-label { font-size: 0.7rem; font-weight: 500; letter-spacing: 0.06em; text-transform: uppercase; color: var(--ink-faint); margin-bottom: 0.5rem; }
+    .hcard-title { font-family: var(--font-display); font-size: 1.1rem; font-weight: 700; color: var(--ink); margin-bottom: 0.75rem; line-height: 1.3; }
+    .hcard-meta { font-size: 0.8rem; color: var(--ink-muted); margin-bottom: 1rem; }
+    .hcard-bar-wrap { background: var(--cream-dark); border-radius: 4px; height: 5px; margin-bottom: 0.4rem; overflow: hidden; }
+    .hcard-bar { height: 100%; border-radius: 4px; background: var(--accent); }
+    .hcard-stat-row { display: flex; justify-content: space-between; font-size: 0.75rem; color: var(--ink-muted); margin-bottom: 1rem; }
+    .hcard-footer { display: flex; align-items: center; justify-content: space-between; }
+    .hcard-badge { background: #edf5e4; color: #3a6a10; font-size: 0.7rem; font-weight: 500; padding: 3px 10px; border-radius: 20px; }
+    .hcard-badge-amber { background: #faf0da; color: #85600b; }
+    .hcard-avatars { display: flex; }
+    .hcard-avatar { width: 26px; height: 26px; border-radius: 50%; border: 2px solid var(--white); margin-left: -8px; font-size: 0.6rem; font-weight: 600; display: flex; align-items: center; justify-content: center; }
+    .hcard-avatar:first-child { margin-left: 0; }
+
+    /* STATS BAR */
+    .stats-bar {
+      background: var(--ink);
+      display: grid; grid-template-columns: repeat(4, 1fr);
+      padding: 2.5rem 3rem; gap: 2rem;
+    }
+    .stat-item { text-align: center; }
+    .stat-num {
+      font-family: var(--font-display); font-size: 2.5rem; font-weight: 900;
+      color: var(--white); letter-spacing: -0.03em; line-height: 1;
+      margin-bottom: 0.35rem;
+    }
+    .stat-num span { color: var(--accent); }
+    .stat-desc { font-size: 0.8rem; color: var(--ink-faint); font-weight: 300; letter-spacing: 0.02em; }
+
+    /* FEATURES */
+    .features {
+      padding: 7rem 3rem;
+      background: var(--white);
+    }
+    .section-tag {
+      font-size: 0.75rem; font-weight: 500; letter-spacing: 0.1em;
+      text-transform: uppercase; color: var(--accent);
+      margin-bottom: 1rem; display: block;
+    }
+    .section-h2 {
+      font-family: var(--font-display);
+      font-size: clamp(2rem, 3.5vw, 3rem);
+      font-weight: 900; line-height: 1.1; letter-spacing: -0.03em;
+      margin-bottom: 1rem; color: var(--ink);
+    }
+    .section-sub { font-size: 1rem; color: var(--ink-muted); font-weight: 300; line-height: 1.7; max-width: 500px; }
+
+    .features-grid {
+      display: grid; grid-template-columns: 1fr 1fr;
+      gap: 0; margin-top: 4rem;
+      border: 1px solid var(--cream-darker);
+      border-radius: 1.5rem; overflow: hidden;
+    }
+    .feat {
+      padding: 2.5rem; border: 1px solid var(--cream-darker);
+      transition: background 0.25s;
+      position: relative; overflow: hidden;
+    }
+    .feat:hover { background: var(--cream); }
+    .feat-icon {
+      width: 48px; height: 48px; border-radius: 0.75rem;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 1.3rem; margin-bottom: 1.25rem;
+    }
+    .feat-icon-orange { background: var(--accent-light); }
+    .feat-icon-dark { background: var(--ink); }
+    .feat-icon-gold { background: #faecd8; }
+    .feat-icon-green { background: #e8f5e0; }
+    .feat-h3 { font-family: var(--font-display); font-size: 1.15rem; font-weight: 700; margin-bottom: 0.6rem; color: var(--ink); }
+    .feat-p { font-size: 0.9rem; color: var(--ink-muted); line-height: 1.7; font-weight: 300; }
+    .feat-accent { position: absolute; bottom: 1.5rem; right: 1.5rem; font-size: 0.8rem; color: var(--accent); font-weight: 500; opacity: 0; transition: opacity 0.2s; }
+    .feat:hover .feat-accent { opacity: 1; }
+
+    /* HOW IT WORKS */
+    .how {
+      padding: 7rem 3rem;
+      background: var(--cream);
+    }
+    .how-inner { max-width: 900px; margin: 0 auto; }
+    .how-header { text-align: center; margin-bottom: 4rem; }
+    .steps { display: grid; grid-template-columns: repeat(3, 1fr); gap: 2rem; position: relative; }
+    .steps::before {
+      content: '';
+      position: absolute; top: 28px; left: calc(16.66% + 1rem); right: calc(16.66% + 1rem);
+      height: 1px; background: linear-gradient(to right, var(--accent), var(--gold));
+    }
+    .step { text-align: center; position: relative; }
+    .step-num {
+      width: 56px; height: 56px; border-radius: 50%;
+      background: var(--accent); color: var(--white);
+      font-family: var(--font-display); font-size: 1.2rem; font-weight: 900;
+      display: flex; align-items: center; justify-content: center;
+      margin: 0 auto 1.25rem; position: relative; z-index: 1;
+      box-shadow: 0 4px 20px rgba(200,82,42,0.3);
+    }
+    .step-num.alt { background: var(--ink); box-shadow: 0 4px 20px rgba(14,13,12,0.2); }
+    .step-h3 { font-family: var(--font-display); font-size: 1rem; font-weight: 700; margin-bottom: 0.5rem; }
+    .step-p { font-size: 0.875rem; color: var(--ink-muted); line-height: 1.6; font-weight: 300; }
+
+    /* EVENTS SHOWCASE */
+    .showcase {
+      padding: 7rem 3rem;
+      background: var(--ink);
+      overflow: hidden;
+    }
+    .showcase-header { display: flex; justify-content: space-between; align-items: flex-end; margin-bottom: 3rem; }
+    .showcase-header .section-h2 { color: var(--white); }
+    .showcase-header .section-tag { color: var(--accent); }
+    .showcase-cards { display: grid; grid-template-columns: repeat(3, 1fr); gap: 1.25rem; }
+    .ev-card {
+      background: rgba(255,255,255,0.05);
+      border: 1px solid rgba(255,255,255,0.08);
+      border-radius: 1.25rem; padding: 1.5rem;
+      transition: background 0.25s, transform 0.2s;
+      cursor: pointer;
+    }
+    .ev-card:hover { background: rgba(255,255,255,0.09); transform: translateY(-4px); }
+    .ev-card-top { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 1rem; }
+    .ev-tag { font-size: 0.7rem; font-weight: 500; letter-spacing: 0.06em; text-transform: uppercase; padding: 4px 10px; border-radius: 20px; }
+    .ev-tag-orange { background: rgba(200,82,42,0.25); color: #f0a080; }
+    .ev-tag-gold { background: rgba(200,151,42,0.25); color: #e0c070; }
+    .ev-tag-green { background: rgba(80,160,80,0.25); color: #90d090; }
+    .ev-dot { width: 8px; height: 8px; border-radius: 50%; background: #4caf50; margin-top: 4px; animation: pulse 2s infinite; }
+    .ev-title { font-family: var(--font-display); font-size: 1.05rem; font-weight: 700; color: var(--white); margin-bottom: 0.4rem; line-height: 1.35; }
+    .ev-meta { font-size: 0.8rem; color: rgba(255,255,255,0.4); margin-bottom: 1.25rem; }
+    .ev-progress-bg { background: rgba(255,255,255,0.1); height: 4px; border-radius: 4px; overflow: hidden; margin-bottom: 0.4rem; }
+    .ev-progress-fill { height: 100%; border-radius: 4px; }
+    .ev-stats { display: flex; justify-content: space-between; font-size: 0.75rem; color: rgba(255,255,255,0.4); }
+    .ev-footer { display: flex; justify-content: space-between; align-items: center; margin-top: 1.25rem; padding-top: 1.25rem; border-top: 1px solid rgba(255,255,255,0.08); }
+    .ev-price { font-family: var(--font-display); font-size: 1.1rem; font-weight: 700; color: var(--white); }
+    .ev-btn {
+      font-size: 0.8rem; padding: 6px 14px; border-radius: 20px;
+      background: var(--accent); color: var(--white); border: none;
+      cursor: pointer; transition: background 0.2s;
+    }
+    .ev-btn:hover { background: var(--accent-dark); }
+
+    /* TESTIMONIALS */
+    .testimonials { padding: 7rem 3rem; background: var(--white); }
+    .testi-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 1.5rem; margin-top: 3.5rem; }
+    .testi-card {
+      border: 1px solid var(--cream-darker); border-radius: 1.25rem;
+      padding: 1.75rem; transition: box-shadow 0.25s;
+    }
+    .testi-card:hover { box-shadow: 0 8px 40px rgba(14,13,12,0.06); }
+    .testi-stars { color: var(--gold); font-size: 0.9rem; margin-bottom: 1rem; letter-spacing: 2px; }
+    .testi-quote { font-family: var(--font-display); font-size: 1rem; font-style: italic; line-height: 1.65; color: var(--ink); margin-bottom: 1.5rem; font-weight: 400; }
+    .testi-author { display: flex; align-items: center; gap: 0.75rem; }
+    .testi-avatar { width: 38px; height: 38px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 0.8rem; font-weight: 600; }
+    .testi-name { font-size: 0.875rem; font-weight: 500; }
+    .testi-role { font-size: 0.75rem; color: var(--ink-faint); }
+
+    /* PRICING */
+    .pricing { padding: 7rem 3rem; background: var(--cream); }
+    .pricing-header { text-align: center; margin-bottom: 3.5rem; }
+    .pricing-grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 1.5rem; max-width: 960px; margin: 0 auto; }
+    .price-card {
+      background: var(--white); border: 1px solid var(--cream-darker);
+      border-radius: 1.5rem; padding: 2rem;
+      transition: transform 0.2s, box-shadow 0.2s;
+    }
+    .price-card:hover { transform: translateY(-4px); box-shadow: 0 12px 50px rgba(14,13,12,0.08); }
+    .price-card.featured {
+      background: var(--ink); border-color: var(--ink);
+      transform: scale(1.04);
+    }
+    .price-card.featured:hover { transform: scale(1.04) translateY(-4px); }
+    .price-plan { font-size: 0.75rem; font-weight: 500; letter-spacing: 0.08em; text-transform: uppercase; color: var(--ink-muted); margin-bottom: 1rem; }
+    .price-card.featured .price-plan { color: rgba(255,255,255,0.5); }
+    .price-amount {
+      font-family: var(--font-display); font-size: 2.5rem; font-weight: 900;
+      letter-spacing: -0.04em; color: var(--ink); margin-bottom: 0.25rem;
+    }
+    .price-card.featured .price-amount { color: var(--white); }
+    .price-period { font-size: 0.8rem; color: var(--ink-faint); margin-bottom: 1.5rem; }
+    .price-card.featured .price-period { color: rgba(255,255,255,0.4); }
+    .price-features { list-style: none; margin-bottom: 2rem; }
+    .price-features li {
+      font-size: 0.875rem; padding: 0.5rem 0;
+      border-bottom: 1px solid var(--cream-dark);
+      color: var(--ink-muted); display: flex; align-items: center; gap: 8px;
+    }
+    .price-card.featured .price-features li { border-bottom-color: rgba(255,255,255,0.08); color: rgba(255,255,255,0.7); }
+    .price-features li::before { content: '✓'; color: var(--accent); font-weight: 700; font-size: 0.8rem; }
+    .price-card.featured .price-features li::before { color: var(--gold); }
+    .price-cta {
+      display: block; text-align: center; padding: 0.8rem;
+      border-radius: 2rem; font-size: 0.9rem; font-weight: 500;
+      text-decoration: none; transition: all 0.2s;
+      border: 1px solid var(--cream-darker);
+      color: var(--ink); background: transparent;
+    }
+    .price-cta:hover { background: var(--cream); border-color: var(--ink-muted); }
+    .price-card.featured .price-cta { background: var(--accent); color: var(--white); border-color: var(--accent); }
+    .price-card.featured .price-cta:hover { background: var(--accent-dark); border-color: var(--accent-dark); }
+    .price-badge {
+      display: inline-block; background: var(--accent-light);
+      color: var(--accent-dark); font-size: 0.7rem; font-weight: 600;
+      padding: 3px 10px; border-radius: 20px; margin-bottom: 1rem;
+    }
+
+    /* CTA BANNER */
+    .cta-banner {
+      margin: 0 3rem 7rem;
+      background: var(--accent); border-radius: 2rem;
+      padding: 4rem; display: flex;
+      align-items: center; justify-content: space-between;
+      overflow: hidden; position: relative;
+    }
+    .cta-banner-bg {
+      position: absolute; right: -5rem; top: -5rem;
+      width: 350px; height: 350px;
+      background: rgba(255,255,255,0.1); border-radius: 50%;
+    }
+    .cta-banner-bg2 {
+      position: absolute; right: 8rem; bottom: -7rem;
+      width: 250px; height: 250px;
+      background: rgba(0,0,0,0.08); border-radius: 50%;
+    }
+    .cta-text { position: relative; z-index: 1; }
+    .cta-h2 { font-family: var(--font-display); font-size: 2rem; font-weight: 900; color: var(--white); margin-bottom: 0.75rem; line-height: 1.2; }
+    .cta-sub { font-size: 1rem; color: rgba(255,255,255,0.75); font-weight: 300; }
+    .cta-btn {
+      position: relative; z-index: 1;
+      background: var(--white); color: var(--accent);
+      padding: 0.9rem 2.2rem; border-radius: 2rem;
+      font-size: 0.95rem; font-weight: 600;
+      text-decoration: none; white-space: nowrap;
+      transition: transform 0.15s, box-shadow 0.2s;
+      box-shadow: 0 4px 20px rgba(0,0,0,0.15);
+    }
+    .cta-btn:hover { transform: translateY(-2px); box-shadow: 0 8px 30px rgba(0,0,0,0.2); }
+
+    /* FOOTER */
+    footer {
+      background: var(--ink); padding: 4rem 3rem 2rem;
+    }
+    .footer-top { display: grid; grid-template-columns: 2fr 1fr 1fr 1fr; gap: 3rem; margin-bottom: 3rem; }
+    .footer-brand .nav-logo { color: var(--white); display: block; margin-bottom: 1rem; font-size: 1.6rem; }
+    .footer-brand p { font-size: 0.875rem; color: rgba(255,255,255,0.4); line-height: 1.7; font-weight: 300; max-width: 260px; }
+    .footer-col h4 { font-size: 0.75rem; font-weight: 500; letter-spacing: 0.08em; text-transform: uppercase; color: rgba(255,255,255,0.4); margin-bottom: 1rem; }
+    .footer-col ul { list-style: none; }
+    .footer-col li { margin-bottom: 0.5rem; }
+    .footer-col a { font-size: 0.875rem; color: rgba(255,255,255,0.55); text-decoration: none; transition: color 0.2s; font-weight: 300; }
+    .footer-col a:hover { color: var(--white); }
+    .footer-bottom { display: flex; justify-content: space-between; align-items: center; padding-top: 2rem; border-top: 1px solid rgba(255,255,255,0.08); }
+    .footer-copy { font-size: 0.8rem; color: rgba(255,255,255,0.3); }
+    .footer-socials { display: flex; gap: 1rem; }
+    .footer-socials a { font-size: 0.8rem; color: rgba(255,255,255,0.35); text-decoration: none; transition: color 0.2s; }
+    .footer-socials a:hover { color: var(--white); }
+
+    /* ANIMATIONS */
+    @keyframes fadeUp {
+      from { opacity: 0; transform: translateY(24px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+    .reveal {
+      opacity: 0; transform: translateY(30px);
+      transition: opacity 0.65s ease, transform 0.65s ease;
+    }
+    .reveal.visible { opacity: 1; transform: translateY(0); }
+    .reveal-delay-1 { transition-delay: 0.1s; }
+    .reveal-delay-2 { transition-delay: 0.2s; }
+    .reveal-delay-3 { transition-delay: 0.3s; }
+    .reveal-delay-4 { transition-delay: 0.4s; }
+
+    /* MOBILE */
+    @media (max-width: 768px) {
+      nav { padding: 1rem 1.25rem; }
+      .nav-links { display: none; }
+      .hero { grid-template-columns: 1fr; padding: 7rem 1.25rem 3rem; }
+      .hero-right { display: none; }
+      .stats-bar { grid-template-columns: repeat(2, 1fr); padding: 2rem 1.25rem; }
+      .features { padding: 4rem 1.25rem; }
+      .features-grid { grid-template-columns: 1fr; }
+      .how { padding: 4rem 1.25rem; }
+      .steps { grid-template-columns: 1fr; }
+      .steps::before { display: none; }
+      .showcase { padding: 4rem 1.25rem; }
+      .showcase-cards { grid-template-columns: 1fr; }
+      .showcase-header { flex-direction: column; gap: 1rem; align-items: flex-start; }
+      .testimonials { padding: 4rem 1.25rem; }
+      .testi-grid { grid-template-columns: 1fr; }
+      .pricing { padding: 4rem 1.25rem; }
+      .pricing-grid { grid-template-columns: 1fr; }
+      .price-card.featured { transform: none; }
+      .cta-banner { margin: 0 1.25rem 4rem; padding: 2.5rem 1.5rem; flex-direction: column; gap: 1.5rem; }
+      footer { padding: 3rem 1.25rem 1.5rem; }
+      .footer-top { grid-template-columns: 1fr 1fr; }
+      .footer-bottom { flex-direction: column; gap: 1rem; }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Custom cursor -->
+  <div class="cursor" id="cursor"></div>
+
+  <!-- NAV -->
+  <nav id="navbar">
+    <a href="#" class="nav-logo">event<span>flow</span></a>
+    <ul class="nav-links">
+      <li><a href="#features">Features</a></li>
+      <li><a href="#how">How it works</a></li>
+      <li><a href="#events">Events</a></li>
+      <li><a href="#pricing">Pricing</a></li>
+    </ul>
+    <div style="display:flex;align-items:center;gap:1rem;">
+      <a href="#" style="font-size:0.875rem;color:var(--ink-muted);text-decoration:none;">Sign in</a>
+      <a href="#" class="nav-cta">Get started free</a>
+    </div>
+  </nav>
+
+  <!-- HERO -->
+  <section class="hero">
+    <div class="hero-bg-shape"></div>
+    <div class="hero-bg-shape2"></div>
+
+    <div class="hero-left">
+      <div class="hero-tag">
+        <div class="dot"></div>
+        Now live in Nigeria & across Africa
+      </div>
+      <h1 class="hero-h1">
+        Events that<br>
+        <em>move people.</em>
+        <span class="line2">Managed simply.</span>
+      </h1>
+      <p class="hero-sub">
+        Create, publish, and sell tickets to unforgettable events — all from one elegant platform built for modern organizers.
+      </p>
+      <div class="hero-actions">
+        <a href="#" class="btn-primary">Start for free</a>
+        <a href="#events" class="btn-ghost">Browse events <span class="arrow">→</span></a>
+      </div>
+    </div>
+
+    <div class="hero-right">
+      <div class="hero-card-stack">
+        <div class="hcard hcard-back2">
+          <div class="hcard-label">Workshop</div>
+          <div class="hcard-title">Design Thinking Bootcamp</div>
+        </div>
+        <div class="hcard hcard-back">
+          <div class="hcard-label">Concert</div>
+          <div class="hcard-title">Afrobeat Night Out</div>
+          <div class="hcard-badge hcard-badge-amber">Almost full</div>
+        </div>
+        <div class="hcard hcard-main">
+          <div class="hcard-label">Conference · Lagos</div>
+          <div class="hcard-title">Lagos Tech Summit 2026</div>
+          <div class="hcard-meta">📍 Landmark Centre &nbsp;·&nbsp; Mar 20, 2026</div>
+          <div class="hcard-bar-wrap"><div class="hcard-bar" style="width:72%"></div></div>
+          <div class="hcard-stat-row"><span>360 tickets sold</span><span>72% full</span></div>
+          <div class="hcard-footer">
+            <div class="hcard-badge">Published ✓</div>
+            <div class="hcard-avatars">
+              <div class="hcard-avatar" style="background:#E6F1FB;color:#185FA5;">CO</div>
+              <div class="hcard-avatar" style="background:#faeeda;color:#854F0B;">TA</div>
+              <div class="hcard-avatar" style="background:#eaf3de;color:#3B6D11;">AN</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- STATS -->
+  <div class="stats-bar">
+    <div class="stat-item reveal">
+      <div class="stat-num">48<span>K+</span></div>
+      <div class="stat-desc">Events organized</div>
+    </div>
+    <div class="stat-item reveal reveal-delay-1">
+      <div class="stat-num">3<span>.2M</span></div>
+      <div class="stat-desc">Tickets sold</div>
+    </div>
+    <div class="stat-item reveal reveal-delay-2">
+      <div class="stat-num">99<span>%</span></div>
+      <div class="stat-desc">Uptime guaranteed</div>
+    </div>
+    <div class="stat-item reveal reveal-delay-3">
+      <div class="stat-num">120<span>+</span></div>
+      <div class="stat-desc">Cities reached</div>
+    </div>
+  </div>
+
+  <!-- FEATURES -->
+  <section class="features" id="features">
+    <span class="section-tag reveal">Everything you need</span>
+    <h2 class="section-h2 reveal">Built for serious<br>event organizers</h2>
+    <p class="section-sub reveal">From intimate workshops to stadium concerts — Evently gives you the tools to pull it off flawlessly.</p>
+
+    <div class="features-grid">
+      <div class="feat reveal">
+        <div class="feat-icon feat-icon-orange">🗓</div>
+        <h3 class="feat-h3">Smart event creation</h3>
+        <p class="feat-p">Create detailed event listings with rich descriptions, custom categories, capacity settings, and scheduled publishing in minutes.</p>
+        <span class="feat-accent">Explore →</span>
+      </div>
+      <div class="feat reveal reveal-delay-1">
+        <div class="feat-icon feat-icon-dark" style="color:var(--cream);">🎟</div>
+        <h3 class="feat-h3">Ticket & RSVP management</h3>
+        <p class="feat-p">Sell tickets, manage RSVPs, approve or cancel bookings — all with real-time capacity tracking and automated confirmations.</p>
+        <span class="feat-accent">Explore →</span>
+      </div>
+      <div class="feat reveal reveal-delay-2">
+        <div class="feat-icon feat-icon-gold">📊</div>
+        <h3 class="feat-h3">Live analytics dashboard</h3>
+        <p class="feat-p">Track ticket sales, revenue, RSVP rates, and attendee demographics in real time from a clean, intuitive admin panel.</p>
+        <span class="feat-accent">Explore →</span>
+      </div>
+      <div class="feat reveal reveal-delay-3">
+        <div class="feat-icon feat-icon-green">🔐</div>
+        <h3 class="feat-h3">Secure auth & roles</h3>
+        <p class="feat-p">Role-based access control for your whole team. Organizers, staff, and admins each get exactly the permissions they need.</p>
+        <span class="feat-accent">Explore →</span>
+      </div>
+    </div>
+  </section>
+
+  <!-- HOW IT WORKS -->
+  <section class="how" id="how">
+    <div class="how-inner">
+      <div class="how-header">
+        <span class="section-tag reveal" style="display:block;text-align:center;">Simple process</span>
+        <h2 class="section-h2 reveal" style="text-align:center;">Up and running<br>in three steps</h2>
+      </div>
+      <div class="steps">
+        <div class="step reveal">
+          <div class="step-num">1</div>
+          <h3 class="step-h3">Create your event</h3>
+          <p class="step-p">Fill out your event details — title, venue, date, ticket price, and capacity. Publish instantly or schedule for later.</p>
+        </div>
+        <div class="step reveal reveal-delay-1">
+          <div class="step-num alt">2</div>
+          <h3 class="step-h3">Share & sell tickets</h3>
+          <p class="step-p">Your event gets a shareable link and a live ticket page. Attendees RSVP or purchase — you get notified in real time.</p>
+        </div>
+        <div class="step reveal reveal-delay-2">
+          <div class="step-num">3</div>
+          <h3 class="step-h3">Manage & analyze</h3>
+          <p class="step-p">Approve RSVPs, track sales, communicate with attendees, and review performance analytics — all from one dashboard.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- EVENTS SHOWCASE -->
+  <section class="showcase" id="events">
+    <div class="showcase-header">
+      <div>
+        <span class="section-tag reveal">Live on Evently</span>
+        <h2 class="section-h2 reveal">Trending events</h2>
+      </div>
+      <a href="#" class="btn-ghost reveal" style="color:#fff;border-color:rgba(255,255,255,0.2);">See all events <span class="arrow">→</span></a>
+    </div>
+    <div class="showcase-cards">
+      <div class="ev-card reveal">
+        <div class="ev-card-top">
+          <span class="ev-tag ev-tag-orange">Conference</span>
+          <div class="ev-dot"></div>
+        </div>
+        <div class="ev-title">Lagos Tech Summit 2026</div>
+        <div class="ev-meta">Mar 20 · Landmark Centre, Lagos</div>
+        <div class="ev-progress-bg"><div class="ev-progress-fill" style="width:72%;background:#c8522a;"></div></div>
+        <div class="ev-stats"><span>360 sold</span><span>72% full</span></div>
+        <div class="ev-footer">
+          <div class="ev-price">₦15,000</div>
+          <button class="ev-btn">Book now</button>
+        </div>
+      </div>
+      <div class="ev-card reveal reveal-delay-1">
+        <div class="ev-card-top">
+          <span class="ev-tag ev-tag-gold">Concert</span>
+          <div class="ev-dot"></div>
+        </div>
+        <div class="ev-title">Afrobeat Night Out — Season 3</div>
+        <div class="ev-meta">Apr 19 · Eko Hotel & Suites, Lagos</div>
+        <div class="ev-progress-bg"><div class="ev-progress-fill" style="width:95%;background:#c8972a;"></div></div>
+        <div class="ev-stats"><span>950 sold</span><span>Almost full</span></div>
+        <div class="ev-footer">
+          <div class="ev-price">₦25,000</div>
+          <button class="ev-btn" style="background:#c8972a;">Book now</button>
+        </div>
+      </div>
+      <div class="ev-card reveal reveal-delay-2">
+        <div class="ev-card-top">
+          <span class="ev-tag ev-tag-green">Workshop</span>
+          <div class="ev-dot"></div>
+        </div>
+        <div class="ev-title">Product Design Bootcamp</div>
+        <div class="ev-meta">Apr 5 · Victoria Island, Lagos</div>
+        <div class="ev-progress-bg"><div class="ev-progress-fill" style="width:40%;background:#50a050;"></div></div>
+        <div class="ev-stats"><span>80 sold</span><span>40% full</span></div>
+        <div class="ev-footer">
+          <div class="ev-price">₦10,000</div>
+          <button class="ev-btn" style="background:#50a050;">Book now</button>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- TESTIMONIALS -->
+  <section class="testimonials">
+    <span class="section-tag reveal">Real organizers</span>
+    <h2 class="section-h2 reveal">Loved by event creators<br>across Africa</h2>
+    <div class="testi-grid">
+      <div class="testi-card reveal">
+        <div class="testi-stars">★★★★★</div>
+        <p class="testi-quote">"Eventflow completely changed how we manage our annual tech conference. The dashboard is clean and intuitive — our team adopted it instantly."</p>
+        <div class="testi-author">
+          <div class="testi-avatar" style="background:#E6F1FB;color:#185FA5;">CO</div>
+          <div>
+            <div class="testi-name">Chioma Obi</div>
+            <div class="testi-role">CEO, TechPulse Lagos</div>
+          </div>
+        </div>
+      </div>
+      <div class="testi-card reveal reveal-delay-1">
+        <div class="testi-stars">★★★★★</div>
+        <p class="testi-quote">"We sold out our concert in 48 hours. The ticket management and RSVP approval flow is exactly what we needed — no technical headaches."</p>
+        <div class="testi-author">
+          <div class="testi-avatar" style="background:#faeeda;color:#854F0B;">TA</div>
+          <div>
+            <div class="testi-name">Tunde Adeyemi</div>
+            <div class="testi-role">Event Director, Afrovibes</div>
+          </div>
+        </div>
+      </div>
+      <div class="testi-card reveal reveal-delay-2">
+        <div class="testi-stars">★★★★★</div>
+        <p class="testi-quote">"The analytics alone make it worth it. I can see ticket sales in real time, which helps me make decisions during the event campaign."</p>
+        <div class="testi-author">
+          <div class="testi-avatar" style="background:#eaf3de;color:#3B6D11;">AN</div>
+          <div>
+            <div class="testi-name">Amaka Nwosu</div>
+            <div class="testi-role">Founder, CreativeHub Abuja</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- PRICING -->
+  <section class="pricing" id="pricing">
+    <div class="pricing-header">
+      <span class="section-tag reveal" style="display:block;">Simple pricing</span>
+      <h2 class="section-h2 reveal">No surprises. Ever.</h2>
+      <p class="section-sub reveal" style="margin:0 auto;text-align:center;">Start free, scale as you grow. All plans include core event creation and ticket management.</p>
+    </div>
+    <div class="pricing-grid">
+      <div class="price-card reveal">
+        <div class="price-plan">Starter</div>
+        <div class="price-amount">Free</div>
+        <div class="price-period">Forever, no card required</div>
+        <ul class="price-features">
+          <li>Up to 3 events/month</li>
+          <li>100 tickets per event</li>
+          <li>Basic analytics</li>
+          <li>Email confirmations</li>
+          <li>Public event page</li>
+        </ul>
+        <a href="#" class="price-cta">Get started free</a>
+      </div>
+
+      <div class="price-card featured reveal reveal-delay-1">
+        <div class="price-badge">Most popular</div>
+        <div class="price-plan">Professional</div>
+        <div class="price-amount">₦12,500</div>
+        <div class="price-period">per month, billed annually</div>
+        <ul class="price-features">
+          <li>Unlimited events</li>
+          <li>Unlimited tickets</li>
+          <li>Full analytics dashboard</li>
+          <li>RSVP approval workflow</li>
+          <li>Team access (5 seats)</li>
+          <li>Custom event branding</li>
+        </ul>
+        <a href="#" class="price-cta">Start free trial</a>
+      </div>
+
+      <div class="price-card reveal reveal-delay-2">
+        <div class="price-plan">Enterprise</div>
+        <div class="price-amount">Custom</div>
+        <div class="price-period">Contact us for a quote</div>
+        <ul class="price-features">
+          <li>Everything in Pro</li>
+          <li>Dedicated support</li>
+          <li>Custom integrations</li>
+          <li>SLA guarantee</li>
+          <li>Unlimited team seats</li>
+          <li>On-premise option</li>
+        </ul>
+        <a href="#" class="price-cta">Talk to sales</a>
+      </div>
+    </div>
+  </section>
+
+  <!-- CTA BANNER -->
+  <div class="cta-banner reveal">
+    <div class="cta-banner-bg"></div>
+    <div class="cta-banner-bg2"></div>
+    <div class="cta-text">
+      <h2 class="cta-h2">Ready to host your<br>next great event?</h2>
+      <p class="cta-sub">Join thousands of organizers already using Evently.</p>
+    </div>
+    <a href="#" class="cta-btn">Create your first event →</a>
+  </div>
+
+  <!-- FOOTER -->
+  <footer>
+    <div class="footer-top">
+      <div class="footer-brand">
+        <a href="#" class="nav-logo">event<span style="color:var(--accent);font-style:italic;">ly</span></a>
+        <p>The modern platform for creating, managing, and selling tickets to events across Africa and beyond.</p>
+      </div>
+      <div class="footer-col">
+        <h4>Product</h4>
+        <ul>
+          <li><a href="#">Features</a></li>
+          <li><a href="#">Pricing</a></li>
+          <li><a href="#">Changelog</a></li>
+          <li><a href="#">Roadmap</a></li>
+        </ul>
+      </div>
+      <div class="footer-col">
+        <h4>Company</h4>
+        <ul>
+          <li><a href="#">About</a></li>
+          <li><a href="#">Blog</a></li>
+          <li><a href="#">Careers</a></li>
+          <li><a href="#">Contact</a></li>
+        </ul>
+      </div>
+      <div class="footer-col">
+        <h4>Legal</h4>
+        <ul>
+          <li><a href="#">Privacy</a></li>
+          <li><a href="#">Terms</a></li>
+          <li><a href="#">Cookies</a></li>
+          <li><a href="#">Refunds</a></li>
+        </ul>
+      </div>
+    </div>
+    <div class="footer-bottom">
+      <span class="footer-copy">© 2026 Eventflow. All rights reserved.</span>
+      <div class="footer-socials">
+        <a href="#">Twitter</a>
+        <a href="#">Instagram</a>
+        <a href="#">LinkedIn</a>
+        <a href="#">WhatsApp</a>
+      </div>
+    </div>
+  </footer>
+
+  <script>
+    // Cursor
+    const cursor = document.getElementById('cursor');
+    document.addEventListener('mousemove', e => {
+      cursor.style.left = e.clientX + 'px';
+      cursor.style.top = e.clientY + 'px';
+    });
+    document.querySelectorAll('a, button, .ev-card, .feat, .testi-card').forEach(el => {
+      el.addEventListener('mouseenter', () => cursor.classList.add('expand'));
+      el.addEventListener('mouseleave', () => cursor.classList.remove('expand'));
+    });
+
+    // Nav scroll
+    const navbar = document.getElementById('navbar');
+    window.addEventListener('scroll', () => {
+      navbar.classList.toggle('scrolled', window.scrollY > 40);
+    });
+
+    // Reveal on scroll
+    const reveals = document.querySelectorAll('.reveal');
+    const observer = new IntersectionObserver((entries) => {
+      entries.forEach(e => { if (e.isIntersecting) { e.target.classList.add('visible'); } });
+    }, { threshold: 0.12 });
+    reveals.forEach(el => observer.observe(el));
+
+    // Counter animation
+    function animateCounter(el, target, suffix) {
+      let start = 0;
+      const duration = 1800;
+      const step = (timestamp) => {
+        if (!start) start = timestamp;
+        const progress = Math.min((timestamp - start) / duration, 1);
+        const eased = 1 - Math.pow(1 - progress, 3);
+        el.textContent = (eased * target).toFixed(target % 1 !== 0 ? 1 : 0) + suffix;
+        if (progress < 1) requestAnimationFrame(step);
+      };
+      requestAnimationFrame(step);
+    }
+    const statsObserver = new IntersectionObserver((entries) => {
+      entries.forEach(e => {
+        if (e.isIntersecting) {
+          const nums = [
+            { el: e.target.querySelectorAll('.stat-num')[0], val: 48, suf: 'K+' },
+            { el: e.target.querySelectorAll('.stat-num')[1], val: 3.2, suf: 'M' },
+            { el: e.target.querySelectorAll('.stat-num')[2], val: 99, suf: '%' },
+            { el: e.target.querySelectorAll('.stat-num')[3], val: 120, suf: '+' },
+          ];
+          nums.forEach(n => { if (n.el) animateCounter(n.el, n.val, n.suf); });
+          statsObserver.disconnect();
+        }
+      });
+    }, { threshold: 0.3 });
+    const statsBar = document.querySelector('.stats-bar');
+    if (statsBar) statsObserver.observe(statsBar);
+  </script>
+</body>
+</html>
