@@ -227,3 +227,4 @@ CORS_ALLOW_ALL_ORIGINS = config('CORS_ALLOW_ALL_ORIGINS', default=False, cast=bo
 # For production, specify the exact frontend origins that are allowed to make requests.
 # e.g. CORS_ALLOWED_ORIGINS=https://your-frontend-domain.com,https://another-domain.com
 CORS_ALLOWED_ORIGINS = config('CORS_ALLOWED_ORIGINS', default='', cast=Csv())
+
