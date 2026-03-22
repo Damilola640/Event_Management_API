@@ -56,7 +56,6 @@ INSTALLED_APPS = [
     'users',
     'events',
     'core',
-    'Frontend',  # Added for serving frontend assets
 ]
 
 MIDDLEWARE = [
