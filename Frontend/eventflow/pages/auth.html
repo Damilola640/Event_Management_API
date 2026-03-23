@@ -51,8 +51,14 @@
       <div class="auth-panel" data-panel="register" role="tabpanel">
         <form id="register-form" novalidate>
           <div class="form-group">
+            <label for="reg-username">Username</label>
+            <input type="text" id="reg-username" name="username" placeholder="e.g. clement_westerholf" required autocomplete="username" />
+            <span class="form-hint">Letters, numbers & underscores only.</span>
+          </div>
+
+          <div class="form-group">
             <label for="reg-name">Full name</label>
-            <input type="text" id="reg-name" name="name" placeholder="Your name" required autocomplete="name" />
+            <input type="text" id="reg-name" name="name" placeholder="e.g. Clement Westerholf" required autocomplete="name" />
           </div>
           <div class="form-group">
             <label for="reg-email">Email address</label>
@@ -64,11 +70,14 @@
           </div>
           <div class="form-group">
             <label for="reg-confirm">Confirm password</label>
-            <input type="password" id="reg-confirm" name="confirm" placeholder="Repeat password" required autocomplete="new-password" />
+            <input type="password" id="reg-confirm" name="confirm" placeholder="Repeat your password" required autocomplete="new-password" />
+          <span class="form-hint">Must match the Password above.</span>
           </div>
+
           <p id="register-error" class="form-error" role="alert"></p>
           <button type="submit" class="btn-primary form-submit">Create account</button>
           <p class="form-footer">By signing up you agree to our <a href="#">Terms</a> &amp; <a href="#">Privacy Policy</a>.</p>
+          
         </form>
       </div>
 
