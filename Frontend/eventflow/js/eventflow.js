@@ -348,7 +348,6 @@ function initRegisterForm() {
 
     } catch (err) {
       if (errEl) errEl.textContent = err.message;
-      
     } finally {
       btn.textContent = 'Create account';
       btn.disabled    = false;
