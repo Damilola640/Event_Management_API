@@ -1,427 +1,716 @@
 /* ==========================================================
-   eventflow.js — All interactions, animations & API helpers
+   eventflow.js — Fully wired to EventFlow Django backend
+   Requires: js/config.js to be loaded first (defines API_BASE)
    ========================================================== */
 
+// ── Configuration ─────────────────────────────────────────
+const API_BASE = window.API_BASE || 'http://127.0.0.1:8000';
+
+// ── Token Helpers ─────────────────────────────────────────
+// Tokens are like a wristband at a concert.
+// You get one when you log in. You show it on every
+// request to prove "I am allowed to be here."
+ 
+function getAccessToken()  { return localStorage.getItem('access_token');  }
+function getRefreshToken() { return localStorage.getItem('refresh_token'); }
+ 
+function saveTokens(access, refresh) {
+  localStorage.setItem('access_token',  access);
+  localStorage.setItem('refresh_token', refresh);
+}
+ 
+function clearTokens() {
+  localStorage.removeItem('access_token');
+  localStorage.removeItem('refresh_token');
+}
+ 
+function isLoggedIn() {
+  return !!getAccessToken();
+}
+ 
+ 
+// ── Auto Refresh Token ────────────────────────────────────
+// Your access token expires every 5 minutes (set in settings.py).
+// This function silently fetches a new one using the refresh token
+// so the user is never randomly kicked out mid-session.
+ 
+async function refreshAccessToken() {
+  const refresh = getRefreshToken();
+  if (!refresh) return null;
+ 
+  try {
+    const res = await fetch(`${API_BASE}/api/users/token/refresh/`, {
+      method:  'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body:    JSON.stringify({ refresh }),
+    });
+ 
+    if (!res.ok) {
+      // The refresh token itself has expired — user must log in again
+      clearTokens();
+      return null;
+    }
+ 
+    const data = await res.json();
+    // Save the brand new access token
+    localStorage.setItem('access_token', data.access);
+    return data.access;
+ 
+  } catch {
+    return null;
+  }
+}
+ 
+ 
+// ── Smart Fetch (apiFetch) ────────────────────────────────
+// A wrapper around the browser's built-in fetch().
+// It automatically:
+//   1. Attaches your Bearer token to every request
+//   2. If the token expired (401), silently refreshes it and retries once
+//   3. Parses the JSON response
+//   4. Throws a human-readable error if Django returns an error
+//
+// Think of it as a smart waiter who remembers your membership
+// card number and shows it every time you order — you never
+// have to think about it.
+ 
+async function apiFetch(url, options = {}) {
+  let token = getAccessToken();
+ 
+  // Build headers — always send JSON, attach token if we have one
+  const headers = {
+    'Content-Type': 'application/json',
+    ...(token ? { 'Authorization': `Bearer ${token}` } : {}),
+    ...(options.headers || {}),
+  };
+ 
+  // Make the first attempt
+  let res = await fetch(url, { ...options, headers });
+ 
+  // 401 = "Unauthorised" — token probably expired
+  if (res.status === 401) {
+    token = await refreshAccessToken();
+ 
+    if (token) {
+      // Got a fresh token — retry the exact same request once more
+      headers['Authorization'] = `Bearer ${token}`;
+      res = await fetch(url, { ...options, headers });
+    } else {
+      // Refresh also failed — user needs to log in again
+      clearTokens();
+      window.location.href = '/pages/auth.html';
+      return;
+    }
+  }
+ 
+  // 204 = "No Content" — success but nothing to return (e.g. DELETE)
+  if (res.status === 204) return true;
+ 
+  const data = await res.json();
+ 
+  // Any 4xx or 5xx status = something went wrong
+  if (!res.ok) {
+    // Django error responses look like:
+    //   { "detail": "Not found." }
+    //   { "email": ["This field must be unique."] }
+    //   { "password": ["Password fields didn't match."] }
+    // We flatten all of these into one readable string.
+    const message =
+      data.detail ||
+      Object.entries(data)
+        .map(([field, errors]) => {
+          const msgs = Array.isArray(errors) ? errors.join(' ') : errors;
+          return `${field}: ${msgs}`;
+        })
+        .join(' | ') ||
+      'Something went wrong. Please try again.';
+ 
+    throw new Error(message);
+  }
+ 
+  return data;
+}
+ 
+ 
 // ── Custom Cursor ─────────────────────────────────────────
+// Shows a small orange dot that follows your mouse.
+// On touchscreens (phones/tablets) we skip this entirely.
+ 
 function initCursor() {
   const cursor = document.getElementById('cursor');
   if (!cursor || window.matchMedia('(pointer: coarse)').matches) return;
-
+ 
   document.body.style.cursor = 'none';
+ 
   document.addEventListener('mousemove', (e) => {
     cursor.style.left = e.clientX + 'px';
     cursor.style.top  = e.clientY + 'px';
   });
-
-  const hoverEls = document.querySelectorAll('a, button, .ev-card, .feat, .testi-card, .price-card');
-  hoverEls.forEach(el => {
-    el.addEventListener('mouseenter', () => cursor.classList.add('expand'));
-    el.addEventListener('mouseleave', () => cursor.classList.remove('expand'));
-  });
+ 
+  // Make the cursor grow when hovering over clickable things
+  document.querySelectorAll('a, button, .ev-card, .feat, .testi-card, .price-card')
+    .forEach(el => {
+      el.addEventListener('mouseenter', () => cursor.classList.add('expand'));
+      el.addEventListener('mouseleave', () => cursor.classList.remove('expand'));
+    });
 }
-
-// ── Navbar Scroll Effect ──────────────────────────────────
+ 
+ 
+// ── Navbar ────────────────────────────────────────────────
+// Adds a border to the navbar when you scroll down.
+// Also updates the auth buttons based on login state.
+ 
 function initNavbar() {
   const navbar = document.querySelector('.navbar');
   if (!navbar) return;
-
-  const onScroll = () => navbar.classList.toggle('scrolled', window.scrollY > 40);
-  window.addEventListener('scroll', onScroll, { passive: true });
+ 
+  window.addEventListener('scroll',
+    () => navbar.classList.toggle('scrolled', window.scrollY > 40),
+    { passive: true }
+  );
+ 
+  updateNavbarAuthState();
 }
-
+ 
+function updateNavbarAuthState() {
+  const signinLink = document.querySelector('.nav-signin');
+  const ctaLink    = document.querySelector('.nav-cta');
+  if (!signinLink) return;
+ 
+  if (isLoggedIn()) {
+    // User is logged in — swap "Sign in" for "Dashboard"
+    signinLink.textContent = 'Dashboard';
+    signinLink.href        = 'http://127.0.0.1:8000/admin/';
+ 
+    // Swap "Get started" for "Log out"
+    if (ctaLink) {
+      ctaLink.textContent = 'Log out';
+      ctaLink.href        = '#';
+      ctaLink.addEventListener('click', (e) => {
+        e.preventDefault();
+        clearTokens();
+        window.location.reload();
+      });
+    }
+  }
+}
+ 
+ 
 // ── Mobile Nav Toggle ─────────────────────────────────────
+// Shows/hides the dropdown menu on small screens.
+ 
 function initMobileNav() {
-  const hamburger = document.getElementById('hamburger');
+  const hamburger  = document.getElementById('hamburger');
   const mobileMenu = document.getElementById('mobile-menu');
   if (!hamburger || !mobileMenu) return;
-
+ 
   hamburger.addEventListener('click', () => {
     const open = mobileMenu.classList.toggle('open');
-    hamburger.setAttribute('aria-expanded', open);
+    hamburger.setAttribute('aria-expanded', String(open));
   });
-
-  // Close on link click
-  mobileMenu.querySelectorAll('a').forEach(a => {
-    a.addEventListener('click', () => mobileMenu.classList.remove('open'));
-  });
+ 
+  // Close the menu when any link inside it is clicked
+  mobileMenu.querySelectorAll('a').forEach(a =>
+    a.addEventListener('click', () => mobileMenu.classList.remove('open'))
+  );
 }
-
+ 
+ 
 // ── Scroll Reveal ─────────────────────────────────────────
+// Elements with class "reveal" start invisible.
+// When they scroll into view they fade + slide up into place.
+ 
 function initReveal() {
-  const reveals = document.querySelectorAll('.reveal');
-  if (!reveals.length) return;
-
-  const observer = new IntersectionObserver((entries) => {
-    entries.forEach(entry => {
-      if (entry.isIntersecting) {
-        entry.target.classList.add('visible');
-      }
-    });
-  }, { threshold: 0.12 });
-
-  reveals.forEach(el => observer.observe(el));
+  const observer = new IntersectionObserver(
+    (entries) => entries.forEach(e => {
+      if (e.isIntersecting) e.target.classList.add('visible');
+    }),
+    { threshold: 0.12 }
+  );
+ 
+  document.querySelectorAll('.reveal').forEach(el => observer.observe(el));
 }
-
+ 
+ 
 // ── Animated Counters ─────────────────────────────────────
+// The numbers in the stats bar (48K+, 3.2M, etc.)
+// count up from zero when they scroll into view.
+ 
 function animateCounter(el, target, suffix, decimals = 0) {
+  if (!el) return;
   let startTime = null;
-  const duration = 1800;
-
-  function step(timestamp) {
+  const duration = 1800; // milliseconds
+ 
+  const step = (timestamp) => {
     if (!startTime) startTime = timestamp;
     const progress = Math.min((timestamp - startTime) / duration, 1);
-    const eased    = 1 - Math.pow(1 - progress, 3);
-    const value    = eased * target;
+    // "Ease out cubic" — starts fast, slows down at the end
+    const eased = 1 - Math.pow(1 - progress, 3);
+    const value = eased * target;
     el.textContent = (decimals ? value.toFixed(decimals) : Math.round(value)) + suffix;
     if (progress < 1) requestAnimationFrame(step);
-  }
+  };
+ 
   requestAnimationFrame(step);
 }
-
+ 
 function initCounters() {
   const statsBar = document.querySelector('.stats-bar');
   if (!statsBar) return;
-
-  const counters = [
-    { selector: '#stat-events',   target: 48,  suffix: 'K+',  decimals: 0 },
-    { selector: '#stat-tickets',  target: 3.2, suffix: 'M',   decimals: 1 },
-    { selector: '#stat-uptime',   target: 99,  suffix: '%',   decimals: 0 },
-    { selector: '#stat-cities',   target: 120, suffix: '+',   decimals: 0 },
-  ];
-
+ 
   const observer = new IntersectionObserver(([entry]) => {
-    if (entry.isIntersecting) {
-      counters.forEach(({ selector, target, suffix, decimals }) => {
-        const el = document.querySelector(selector);
-        if (el) animateCounter(el, target, suffix, decimals);
-      });
-      observer.disconnect();
-    }
+    if (!entry.isIntersecting) return;
+ 
+    animateCounter(document.getElementById('stat-events'),  48,  'K+');
+    animateCounter(document.getElementById('stat-tickets'), 3.2, 'M',  1);
+    animateCounter(document.getElementById('stat-uptime'),  99,  '%');
+    animateCounter(document.getElementById('stat-cities'),  120, '+');
+ 
+    observer.disconnect(); // Only animate once
   }, { threshold: 0.3 });
-
+ 
   observer.observe(statsBar);
 }
-
-// ── Events Data & Rendering ───────────────────────────────
-const MOCK_EVENTS = [
-  {
-    id: 1,
-    tag: 'Conference', tagClass: 'orange',
-    title: 'Lagos Tech Summit 2026',
-    meta: 'Mar 20 · Landmark Centre, Lagos',
-    progress: 72, sold: 360, capacity: 500,
-    price: '₦15,000', btnClass: 'orange',
-  },
-  {
-    id: 2,
-    tag: 'Concert', tagClass: 'gold',
-    title: 'Afrobeat Night Out — Season 3',
-    meta: 'Apr 19 · Eko Hotel & Suites, Lagos',
-    progress: 95, sold: 950, capacity: 1000,
-    price: '₦25,000', btnClass: 'gold',
-  },
-  {
-    id: 3,
-    tag: 'Workshop', tagClass: 'green',
-    title: 'Product Design Bootcamp',
-    meta: 'Apr 5 · Victoria Island, Lagos',
-    progress: 40, sold: 80, capacity: 200,
-    price: '₦10,000', btnClass: 'green',
-  },
-];
-
+ 
+ 
+// ── Render One Event Card ─────────────────────────────────
+// Takes one event object from your Django API and builds
+// an HTML string for the event card.
+//
+// Your Django API returns events that look like:
+// {
+//   id:               1,
+//   title:            "Lagos Tech Summit 2026",
+//   slug:             "lagos-tech-summit-2026",
+//   start_date:       "2026-03-20T09:00:00Z",
+//   venue:            { name: "Landmark Centre" },
+//   category:         { name: "Conference" },
+//   capacity:         500,
+//   registered_count: 360,
+//   ticket_price:     "15000.00",
+//   status:           "published"
+// }
+ 
 function renderEventCard(event) {
+  // How full is the event? (as a percentage 0-100)
+  const capacity   = event.capacity || 1;
+  const registered = event.registered_count || event.attendees_count || 0;
+  const progress   = Math.min(Math.round((registered / capacity) * 100), 100);
+ 
+  // Format the date: "20 Mar 2026"
+  const dateStr = event.start_date
+    ? new Date(event.start_date).toLocaleDateString('en-GB', {
+        day: 'numeric', month: 'short', year: 'numeric',
+      })
+    : 'Date TBC';
+ 
+  // Format the ticket price: "₦15,000" or "Free"
+  const price = event.ticket_price && Number(event.ticket_price) > 0
+    ? `₦${Number(event.ticket_price).toLocaleString()}`
+    : 'Free';
+ 
+  // Pick a colour theme based on the category
+  const categoryName = event.category?.name || 'Event';
+  const colorMap = {
+    'Conference': 'orange',
+    'Concert':    'gold',
+    'Workshop':   'green',
+    'Networking': 'orange',
+    'Webinar':    'green',
+    'Seminar':    'gold',
+  };
+  const color = colorMap[categoryName] || 'orange';
+ 
+  // Venue name — handle both object and plain string
+  const venueName = event.venue?.name || event.location || 'Venue TBC';
+ 
   return `
-    <div class="ev-card reveal" data-event-id="${event.id}" role="article" tabindex="0">
+    <div class="ev-card reveal" role="article" tabindex="0">
       <div class="ev-card-top">
-        <span class="ev-tag ev-tag-${event.tagClass}">${event.tag}</span>
+        <span class="ev-tag ev-tag-${color}">${categoryName}</span>
         <div class="ev-live-dot" aria-label="Live event"></div>
       </div>
+ 
       <div class="ev-title">${event.title}</div>
-      <div class="ev-meta">${event.meta}</div>
-      <div class="ev-progress-bg" role="progressbar" aria-valuenow="${event.progress}" aria-valuemin="0" aria-valuemax="100">
-        <div class="ev-progress-fill fill-${event.tagClass}" style="width:${event.progress}%"></div>
+      <div class="ev-meta">${dateStr} · ${venueName}</div>
+ 
+      <div class="ev-progress-bg"
+           role="progressbar"
+           aria-valuenow="${progress}"
+           aria-valuemin="0"
+           aria-valuemax="100">
+        <div class="ev-progress-fill fill-${color}" style="width:${progress}%"></div>
       </div>
+ 
       <div class="ev-stats">
-        <span>${event.sold} sold</span>
-        <span>${event.progress}% full</span>
+        <span>${registered} registered</span>
+        <span>${progress}% full</span>
       </div>
+ 
       <div class="ev-footer">
-        <div class="ev-price">${event.price}</div>
-        <button class="ev-btn ev-btn-${event.btnClass}" data-event-id="${event.id}">Book now</button>
+        <div class="ev-price">${price}</div>
+        <button
+          class="ev-btn ev-btn-${color}"
+          onclick="window.location.href='pages/booking.html?slug=${event.slug}'">
+          Book now
+        </button>
       </div>
     </div>
   `;
 }
-
+ 
+ 
+// ── Load Events from Django API ───────────────────────────
+// Called on index.html to fill the events showcase section.
+// Fetches from GET /api/events/ and renders the first 3 results.
+//
+// Django returns paginated results like:
+// {
+//   "count":    10,
+//   "next":     "http://...?page=2",
+//   "previous": null,
+//   "results":  [ {...}, {...}, ... ]
+// }
+ 
 async function loadEvents() {
   const container = document.getElementById('events-container');
   if (!container) return;
-
-  // ── Swap this block with your real API call ───────────
-  // Example:
-  // const res   = await fetch('https://eventflow-b919.onrender.com/api/events?limit=3&status=published');
-  // const data  = await res.json();
-  // const events = data.events;
-  //
-  // For now we use mock data:
-  const events = MOCK_EVENTS;
-  // ─────────────────────────────────────────────────────
-
-  container.innerHTML = events.map(renderEventCard).join('');
-
-  // Attach Book Now handlers
-  container.querySelectorAll('[data-event-id]').forEach(btn => {
-    btn.addEventListener('click', (e) => {
-      const id = e.currentTarget.dataset.eventId;
-      window.location.href = `pages/booking.html?event=${id}`;
-    });
-  });
-
-  // Re-run reveal on dynamically injected cards
-  initReveal();
+ 
+  // Show loading state while we wait for Django
+  container.innerHTML = `
+    <p style="color:rgba(255,255,255,0.4);font-size:0.9rem;grid-column:1/-1;text-align:center;">
+      Loading events…
+    </p>`;
+ 
+  try {
+    // GET http://127.0.0.1:8000/api/events/
+    const data   = await apiFetch(`${API_BASE}/api/events/`);
+ 
+    // Handle both paginated ({ results: [...] }) and plain array responses
+    const events = Array.isArray(data) ? data : (data.results || []);
+ 
+    if (!events.length) {
+      container.innerHTML = `
+        <p style="color:rgba(255,255,255,0.4);font-size:0.9rem;grid-column:1/-1;text-align:center;">
+          No events yet — check back soon!
+        </p>`;
+      return;
+    }
+ 
+    // Render only first 3 on the landing page
+    container.innerHTML = events.slice(0, 3).map(renderEventCard).join('');
+ 
+    // Run reveal animations on the newly injected cards
+    initReveal();
+ 
+  } catch (err) {
+    console.error('Could not load events:', err.message);
+    container.innerHTML = `
+      <p style="color:rgba(255,255,255,0.4);font-size:0.9rem;grid-column:1/-1;text-align:center;">
+        Could not load events. Make sure Django is running at ${API_BASE}
+      </p>`;
+  }
 }
-
-// ── Auth Form Tabs (auth.html) ────────────────────────────
+ 
+ 
+// ── Auth Tabs (auth.html) ─────────────────────────────────
+// Switches between the Login and Register panels.
+ 
 function initAuthTabs() {
-  const tabs    = document.querySelectorAll('.auth-tab');
-  const panels  = document.querySelectorAll('.auth-panel');
+  const tabs   = document.querySelectorAll('.auth-tab');
+  const panels = document.querySelectorAll('.auth-panel');
   if (!tabs.length) return;
-
+ 
   tabs.forEach(tab => {
     tab.addEventListener('click', () => {
       const target = tab.dataset.tab;
-      tabs.forEach(t => t.classList.toggle('active', t.dataset.tab === target));
+      tabs.forEach(t   => t.classList.toggle('active', t.dataset.tab   === target));
       panels.forEach(p => p.classList.toggle('active', p.dataset.panel === target));
     });
   });
 }
-
-// ── Login Form Submit ─────────────────────────────────────
+ 
+ 
+// ── Login ─────────────────────────────────────────────────
+// POST /api/users/token/
+// Sends: { email, password }
+// Gets back: { access, refresh }
+ 
 function initLoginForm() {
   const form = document.getElementById('login-form');
   if (!form) return;
-
+ 
   form.addEventListener('submit', async (e) => {
     e.preventDefault();
+ 
     const email    = form.querySelector('[name="email"]').value.trim();
     const password = form.querySelector('[name="password"]').value;
     const btn      = form.querySelector('button[type="submit"]');
     const errEl    = document.getElementById('login-error');
-
+ 
+    // Basic validation before hitting the API
+    if (!email || !password) {
+      if (errEl) errEl.textContent = 'Please fill in all fields.';
+      return;
+    }
+ 
     btn.textContent = 'Signing in…';
     btn.disabled    = true;
-    if (errEl) errEl.textContent = '';
-
+    if (errEl) {
+      errEl.style.color = '#c0392b';
+      errEl.textContent = '';
+    }
+ 
     try {
-      // ── Replace with your API ──
-      // const res  = await fetch('https://eventflow-b919.onrender.com/api/auth/login', {
-      //   method: 'POST',
-      //   headers: { 'Content-Type': 'application/json' },
-      //   body: JSON.stringify({ email, password }),
-      // });
-      // const data = await res.json();
-      // if (!res.ok) throw new Error(data.message || 'Login failed');
-      // localStorage.setItem('token', data.token);
-      // window.location.href = '/dashboard.html';
-
-      // Mock success:
-      await new Promise(r => setTimeout(r, 900));
-      alert('Login successful! (Connect your API to proceed.)');
+      // POST http://127.0.0.1:8000/api/users/token/
+      // Returns: { "access": "eyJ...", "refresh": "eyJ..." }
+      const data = await apiFetch(`${API_BASE}/api/users/token/`, {
+        method: 'POST',
+        body:   JSON.stringify({ email, password }),
+      });
+ 
+      // Save both tokens into the browser's localStorage
+      // access_token  = short-lived key for API requests (5 mins)
+      // refresh_token = long-lived key to silently get new access tokens (1 day)
+      saveTokens(data.access, data.refresh);
+ 
+      // Redirect to homepage — now logged in
+      window.location.href = '../index.html';
+ 
     } catch (err) {
+      // Common Django errors:
+      // "No active account found with the given credentials"
       if (errEl) errEl.textContent = err.message;
+ 
     } finally {
       btn.textContent = 'Sign in';
       btn.disabled    = false;
     }
   });
 }
-
-// ── Register Form Submit ──────────────────────────────────
+ 
+ 
+// ── Register ──────────────────────────────────────────────
+// POST /api/users/register/
+//
+// Your UserRegistrationSerializer requires these exact fields:
+// ┌────────────┬──────────────────────────────────────────┐
+// │ username   │ unique, no spaces                        │
+// │ email      │ unique                                   │
+// │ first_name │ required                                 │
+// │ last_name  │ required                                 │
+// │ password   │ min 8 chars                              │
+// │ password2  │ must match password (checked by Django)  │
+// └────────────┴──────────────────────────────────────────┘
+//
+// Returns: { id, username, email, tokens: { access, refresh } }
+// Your backend logs the user in immediately after registering.
+ 
 function initRegisterForm() {
   const form = document.getElementById('register-form');
   if (!form) return;
-
+ 
   form.addEventListener('submit', async (e) => {
     e.preventDefault();
-    const username     = form.querySelector('[name="username"]').value.trim();
-    const fullName     = form.querySelector('[name="name"]').value.trim();
+ 
+    const username = form.querySelector('[name="username"]').value.trim();
+    const fullName = form.querySelector('[name="name"]').value.trim();
     const email    = form.querySelector('[name="email"]').value.trim();
     const password = form.querySelector('[name="password"]').value;
     const confirm  = form.querySelector('[name="confirm"]').value;
     const btn      = form.querySelector('button[type="submit"]');
     const errEl    = document.getElementById('register-error');
-
-    // - Client-side validation ---
-    // we check before calling the API to give instant feedback.
-    // Think of this as checking your homework before handling it in.#
-    
+ 
+    // ── Client-side validation ─────────────────────────────
+    // Check everything BEFORE calling the API.
+    // This gives instant feedback without a network round-trip.
+ 
     if (!username) {
       if (errEl) errEl.textContent = 'Please choose a username.';
       return;
     }
-
-    // Django username can't have spaces
     if (/\s/.test(username)) {
       if (errEl) errEl.textContent = 'Username cannot contain spaces.';
       return;
     }
-
     if (!fullName) {
       if (errEl) errEl.textContent = 'Please enter your full name.';
       return;
     }
-
     if (!email.includes('@')) {
       if (errEl) errEl.textContent = 'Please enter a valid email address.';
       return;
     }
-
     if (password.length < 8) {
       if (errEl) errEl.textContent = 'Password must be at least 8 characters.';
       return;
     }
-
     if (password !== confirm) {
-      if (errEl) errEl.textContent = 'Password do not match.';
+      if (errEl) errEl.textContent = 'Passwords do not match.';
       return;
     }
-
-    // --- Split full name into first + last -------
-    // --- "Clement Westerholf" ->first: "Clement", last: "Westerholf"
-    // --- "Clement Westerholf Fernandez" -> first: "Clement", last: "Westerholf Fernandez"
-    // --- "Clement" -> first: "Clement", last: "Clement" (fallback to avoid empty last name)
-    const nameParts = fullName.trim().split(' ');
+ 
+    // ── Split full name into first + last ──────────────────
+    // "Clement Obi"       → first: "Clement",  last: "Obi"
+    // "Clement Obi James" → first: "Clement",  last: "Obi James"
+    // "Clement"           → first: "Clement",  last: "Clement" (single name fallback)
+    const nameParts = fullName.trim().split(/\s+/);
     const firstName = nameParts[0];
-    const lastName = nameParts.length > 1
-      ? nameParts.slice(1).join(' ')
-      : firstName; // fallback: use first name again if only one word given
-    
+    const lastName  = nameParts.length > 1 ? nameParts.slice(1).join(' ') : firstName;
+ 
     btn.textContent = 'Creating account…';
     btn.disabled    = true;
-    if (errEl) errEl.textContent = '';
-
+    if (errEl) {
+      errEl.style.color = '#c0392b';
+      errEl.textContent = '';
+    }
+ 
     try {
-      
-// POST http://127.0.0.1:8000/api/users/register/
-      //
-      // Sending ALL fields the serializer requires:
-      // ┌─────────────┬──────────────────────────────────┐
-      // │ Field       │ Value                            │
-      // ├─────────────┼──────────────────────────────────┤
-      // │ username    │ from username input              │
-      // │ email       │ from email input                 │
-      // │ first_name  │ first word of full name          │
-      // │ last_name   │ remaining words of full name     │
-      // │ password    │ from password input              │
-      // │ password2   │ same as password (confirm field) │
-      // │ role        │ not sent → Django uses default   │
-      // └─────────────┴──────────────────────────────────┘
-      const data = await apiFetch('${API_BASE}/api/users/register/', {
+      // POST http://127.0.0.1:8000/api/users/register/
+      const data = await apiFetch(`${API_BASE}/api/users/register/`, {
         method: 'POST',
         body: JSON.stringify({
           username,
           email,
           first_name: firstName,
-          last_name: lastName,
+          last_name:  lastName,
           password,
-          password2: confirm,
+          password2:  confirm,  // Django validates this server-side too
         }),
       });
-
-      // -- Backend returns tokens right after register ---
-      // the user is logged in immediately - no need to redirect to login.
-      //
+ 
+      // ── Backend returns tokens immediately on register ─────
       // data = {
       //   "id": 1,
-      //   "username": "clement_westerholf",
+      //   "username": "clement_obi",
       //   "email": "clement@example.com",
       //   "tokens": {
-      // "access": "eyJ...", <- short-lived (5 mins)
-      // "refresh": "eyJ..." <- long-lived (1 day)
-      //  }
+      //     "access":  "eyJ...",
+      //     "refresh": "eyJ..."
+      //   }
       // }
-      
       if (data.tokens?.access) {
         saveTokens(data.tokens.access, data.tokens.refresh);
-      
-      // Logged in immediately and displays the homepage
-      window.location.href = '../index.html';
-
+        // Logged in straight away — go to homepage
+        window.location.href = '../index.html';
+ 
       } else {
-        // No tokens returned - show success and switch to login tab
+        // No tokens in response — fall back to login tab
         const loginTab = document.querySelector('[data-tab="login"]');
         if (loginTab) loginTab.click();
-
+ 
         const loginErr = document.getElementById('login-error');
         if (loginErr) {
           loginErr.style.color = '#3a6a10';
-          loginErr.textContent = 'Account created! Please sign in.';
+          loginErr.textContent = '✓ Account created! Please sign in.';
         }
       }
-
+ 
     } catch (err) {
+      // Django error examples:
+      // "username: A user with that username already exists."
+      // "email: This field must be unique."
       if (errEl) errEl.textContent = err.message;
+ 
     } finally {
       btn.textContent = 'Create account';
       btn.disabled    = false;
     }
   });
 }
-
-// ── RSVP / Booking Form ───────────────────────────────────
-function initBookingForm() {
-  const form = document.getElementById('booking-form');
+ 
+ 
+// ── Booking / RSVP (booking.html) ─────────────────────────
+// Reads the event slug from the URL, loads the event details,
+// then POSTs to /api/events/<slug>/register/ when submitted.
+//
+// URL format: booking.html?slug=lagos-tech-summit-2026
+ 
+async function initBookingForm() {
+  const form    = document.getElementById('booking-form');
   if (!form) return;
-
-  // Pre-fill event from URL params
+ 
   const params  = new URLSearchParams(window.location.search);
-  const eventId = params.get('event');
-  const event   = MOCK_EVENTS.find(e => String(e.id) === eventId);
+  const slug    = params.get('slug');
   const titleEl = document.getElementById('booking-event-title');
-  if (event && titleEl) titleEl.textContent = event.title;
-
+ 
+  // No slug in URL — nothing to book
+  if (!slug) {
+    if (titleEl) titleEl.textContent = 'No event selected.';
+    form.innerHTML = `<p style="color:var(--ink-muted)">Please go back and select an event.</p>`;
+    return;
+  }
+ 
+  // Load and display the event name at top of the form
+  try {
+    // GET http://127.0.0.1:8000/api/events/lagos-tech-summit-2026/
+    const event = await apiFetch(`${API_BASE}/api/events/${slug}/`);
+    if (titleEl) titleEl.textContent = event.title;
+  } catch {
+    if (titleEl) titleEl.textContent = 'Event not found.';
+    return;
+  }
+ 
+  // Handle the booking form submission
   form.addEventListener('submit', async (e) => {
     e.preventDefault();
-    const name    = form.querySelector('[name="name"]').value.trim();
-    const email   = form.querySelector('[name="email"]').value.trim();
-    const tickets = form.querySelector('[name="tickets"]').value;
-    const btn     = form.querySelector('button[type="submit"]');
-    const errEl   = document.getElementById('booking-error');
-    const succEl  = document.getElementById('booking-success');
-
+ 
+    // User must be logged in to book
+    if (!isLoggedIn()) {
+      // Save where they were trying to go, then send to login
+      window.location.href = `auth.html?next=booking.html?slug=${slug}`;
+      return;
+    }
+ 
+    const btn    = form.querySelector('button[type="submit"]');
+    const errEl  = document.getElementById('booking-error');
+    const succEl = document.getElementById('booking-success');
+ 
     btn.textContent = 'Booking…';
     btn.disabled    = true;
     if (errEl)  errEl.textContent  = '';
     if (succEl) succEl.textContent = '';
-
+ 
     try {
-      // ── Replace with your API ──
-      // const token = localStorage.getItem('token');
-      // const res   = await fetch('https://eventflow-b919.onrender.com/api/rsvp', {
-      //   method: 'POST',
-      //   headers: {
-      //     'Content-Type': 'application/json',
-      //     'Authorization': `Bearer ${token}`,
-      //   },
-      //   body: JSON.stringify({ eventId, name, email, tickets: Number(tickets) }),
-      // });
-      // const data = await res.json();
-      // if (!res.ok) throw new Error(data.message || 'Booking failed');
-
-      await new Promise(r => setTimeout(r, 900));
-      if (succEl) succEl.textContent = `🎉 You're booked! A confirmation has been sent to ${email}.`;
-      form.reset();
+      // POST http://127.0.0.1:8000/api/events/lagos-tech-summit-2026/register/
+      // Header: Authorization: Bearer <access_token>
+      // Body: {} — Django gets the user identity from the token
+      await apiFetch(`${API_BASE}/api/events/${slug}/register/`, {
+        method: 'POST',
+        body:   JSON.stringify({}),
+      });
+ 
+      // Show success message
+      if (succEl) {
+        succEl.textContent = '🎉 You\'re registered! Check your email for confirmation.';
+      }
+ 
+      // Disable the form so they can't double-book
+      form.querySelectorAll('input, select, button').forEach(el => {
+        el.disabled = true;
+      });
+ 
     } catch (err) {
+      // Common errors:
+      // "You are already registered for this event."
+      // "This event is fully booked."
       if (errEl) errEl.textContent = err.message;
+ 
     } finally {
       btn.textContent = 'Confirm booking';
-      btn.disabled    = false;
+      // Only re-enable the button if there was an error
+      if (document.getElementById('booking-success')?.textContent === '') {
+        btn.disabled = false;
+      }
     }
   });
 }
-
-// ── Smooth scroll for anchor links ────────────────────────
+ 
+ 
+// ── Smooth Scroll ─────────────────────────────────────────
+// Makes clicking navbar anchor links (#features, #pricing etc.)
+// scroll smoothly instead of jumping.
+ 
 function initSmoothScroll() {
   document.querySelectorAll('a[href^="#"]').forEach(link => {
     link.addEventListener('click', (e) => {
@@ -433,20 +722,25 @@ function initSmoothScroll() {
     });
   });
 }
-
+ 
+ 
 // ── Boot ──────────────────────────────────────────────────
+// This runs once when the browser has fully loaded the page HTML.
+// It starts every feature above.
+ 
 document.addEventListener('DOMContentLoaded', () => {
-  initCursor();
-  initNavbar();
-  initMobileNav();
-  initReveal();
-  initCounters();
-  initSmoothScroll();
-
-  // Page-specific
-  loadEvents();       // landing page events section
-  initAuthTabs();     // auth.html
-  initLoginForm();    // auth.html login
-  initRegisterForm(); // auth.html register
-  initBookingForm();  // booking.html
+  initCursor();       // custom mouse cursor
+  initNavbar();       // scroll effect + auth state
+  initMobileNav();    // hamburger menu on mobile
+  initReveal();       // scroll-triggered fade animations
+  initCounters();     // animated stat numbers
+  initSmoothScroll(); // smooth anchor scrolling
+ 
+  // Page-specific — each function checks if its
+  // required element exists before doing anything
+  loadEvents();        // index.html  — fetches events from Django
+  initAuthTabs();      // auth.html   — login/register tab switching
+  initLoginForm();     // auth.html   — login form
+  initRegisterForm();  // auth.html   — register form
+  initBookingForm();   // booking.html — event booking form
 });
