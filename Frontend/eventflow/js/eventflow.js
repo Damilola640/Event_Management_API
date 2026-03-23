@@ -1,5 +1,5 @@
 /* ==========================================================
-   evently.js — All interactions, animations & API helpers
+   eventflow.js — All interactions, animations & API helpers
    ========================================================== */
 
 // ── Custom Cursor ─────────────────────────────────────────
@@ -244,37 +244,111 @@ function initRegisterForm() {
 
   form.addEventListener('submit', async (e) => {
     e.preventDefault();
-    const name     = form.querySelector('[name="name"]').value.trim();
+    const username     = form.querySelector('[name="username"]').value.trim();
+    const fullName     = form.querySelector('[name="name"]').value.trim();
     const email    = form.querySelector('[name="email"]').value.trim();
     const password = form.querySelector('[name="password"]').value;
     const confirm  = form.querySelector('[name="confirm"]').value;
     const btn      = form.querySelector('button[type="submit"]');
     const errEl    = document.getElementById('register-error');
 
-    if (password !== confirm) {
-      if (errEl) errEl.textContent = 'Passwords do not match.';
+    // - Client-side validation ---
+    // we check before calling the API to give instant feedback.
+    // Think of this as checking your homework before handling it in.#
+    
+    if (!username) {
+      if (errEl) errEl.textContent = 'Please choose a username.';
       return;
     }
 
+    // Django username can't have spaces
+    if (/\s/.test(username)) {
+      if (errEl) errEl.textContent = 'Username cannot contain spaces.';
+      return;
+    }
+
+    if (!fullName) {
+      if (errEl) errEl.textContent = 'Please enter your full name.';
+      return;
+    }
+
+    if (!email.includes('@')) {
+      if (errEl) errEl.textContent = 'Please enter a valid email address.';
+      return;
+    }
+
+    if (password.length < 8) {
+      if (errEl) errEl.textContent = 'Password must be at least 8 characters.';
+      return;
+    }
+
+    if (password !== confirm) {
+      if (errEl) errEl.textContent = 'Password do not match.';
+      return;
+    }
+
+    // --- Split full name into first + last -------
+    // --- "Clement Westerholf" ->first: "Clement", last: "Westerholf"
+    // --- "Clement Westerholf Fernandez" -> first: "Clement", last: "Westerholf Fernandez"
+    // --- "Clement" -> first: "Clement", last: "Clement" (fallback to avoid empty last name)
+    const nameParts = fullName.trim().split(' ');
+    const firstName = nameParts[0];
+    const lastName = nameParts.length > 1
+      ? nameParts.slice(1).join(' ')
+      : firstName; // fallback: use first name again if only one word given
+    
     btn.textContent = 'Creating account…';
     btn.disabled    = true;
     if (errEl) errEl.textContent = '';
 
     try {
-      // ── Replace with your API ──
-      // const res  = await fetch('https://eventflow-b919.onrender.com/api/auth/register', {
-      //   method: 'POST',
-      //   headers: { 'Content-Type': 'application/json' },
-      //   body: JSON.stringify({ name, email, password }),
-      // });
-      // const data = await res.json();
-      // if (!res.ok) throw new Error(data.message || 'Registration failed');
-      // window.location.href = 'auth.html'; // redirect to login
+      
+// POST http://127.0.0.1:8000/api/users/register/
+      //
+      // Sending ALL fields the serializer requires:
+      // ┌─────────────┬──────────────────────────────────┐
+      // │ Field       │ Value                            │
+      // ├─────────────┼──────────────────────────────────┤
+      // │ username    │ from username input              │
+      // │ email       │ from email input                 │
+      // │ first_name  │ first word of full name          │
+      // │ last_name   │ remaining words of full name     │
+      // │ password    │ from password input              │
+      // │ password2   │ same as password (confirm field) │
+      // │ role        │ not sent → Django uses default   │
+      // └─────────────┴──────────────────────────────────┘
+      const data = await apiFetch('${API_BASE}/api/users/register/', {
+        method: 'POST',
+        body: JSON.stringify({
+          username,
+          first_name: firstName,
+          last_name: lastName,
+          password,
+          password2: confirm,
+        }),
+      });
 
-      await new Promise(r => setTimeout(r, 900));
-      alert('Account created! (Connect your API to proceed.)');
+      if (data.tokens?.access) {
+        saveTokens(data.tokens.access, data.tokens.refresh);
+      
+      // Logged in immediately and displays the homepage
+      window.location.href = '../index.html';
+
+      } else {
+        // No tokens returned - show success and switch to login tab
+        const loginTab = document.querySelector('[data-tab="login"]');
+        if (loginTab) loginTab.click();
+
+        const loginErr = document.getElementById('login-error');
+        if (loginErr) {
+          loginErr.style.color = '#3a6a10';
+          loginErr.textContent = 'Account created! Please sign in.';
+        }
+      }
+
     } catch (err) {
       if (errEl) errEl.textContent = err.message;
+      
     } finally {
       btn.textContent = 'Create account';
       btn.disabled    = false;
