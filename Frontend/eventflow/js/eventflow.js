@@ -321,6 +321,7 @@ function initRegisterForm() {
         method: 'POST',
         body: JSON.stringify({
           username,
+          email,
           first_name: firstName,
           last_name: lastName,
           password,
@@ -328,6 +329,19 @@ function initRegisterForm() {
         }),
       });
 
+      // -- Backend returns tokens right after register ---
+      // the user is logged in immediately - no need to redirect to login.
+      //
+      // data = {
+      //   "id": 1,
+      //   "username": "clement_westerholf",
+      //   "email": "clement@example.com",
+      //   "tokens": {
+      // "access": "eyJ...", <- short-lived (5 mins)
+      // "refresh": "eyJ..." <- long-lived (1 day)
+      //  }
+      // }
+      
       if (data.tokens?.access) {
         saveTokens(data.tokens.access, data.tokens.refresh);
       
