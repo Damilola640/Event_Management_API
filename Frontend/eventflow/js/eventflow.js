@@ -30,7 +30,7 @@ function isLoggedIn() {
  
  
 // ── Auto Refresh Token ────────────────────────────────────
-// Your access token expires every 5 minutes (set in settings.py).
+// Access tokens expires every 5 minutes (set in settings.py).
 // This function silently fetches a new one using the refresh token
 // so the user is never randomly kicked out mid-session.
  
@@ -65,7 +65,7 @@ async function refreshAccessToken() {
 // ── Smart Fetch (apiFetch) ────────────────────────────────
 // A wrapper around the browser's built-in fetch().
 // It automatically:
-//   1. Attaches your Bearer token to every request
+//   1. Attaches Bearer tokens to every request
 //   2. If the token expired (401), silently refreshes it and retries once
 //   3. Parses the JSON response
 //   4. Throws a human-readable error if Django returns an error
@@ -114,7 +114,7 @@ async function apiFetch(url, options = {}) {
     //   { "detail": "Not found." }
     //   { "email": ["This field must be unique."] }
     //   { "password": ["Password fields didn't match."] }
-    // We flatten all of these into one readable string.
+    // All of these are flatten into one readable string.
     const message =
       data.detail ||
       Object.entries(data)
@@ -133,8 +133,8 @@ async function apiFetch(url, options = {}) {
  
  
 // ── Custom Cursor ─────────────────────────────────────────
-// Shows a small orange dot that follows your mouse.
-// On touchscreens (phones/tablets) we skip this entirely.
+// Shows a small orange dot that follows the mouse.
+// On touchscreens (phones/tablets) these are skipped entirely.
  
 function initCursor() {
   const cursor = document.getElementById('cursor');
@@ -157,7 +157,7 @@ function initCursor() {
  
  
 // ── Navbar ────────────────────────────────────────────────
-// Adds a border to the navbar when you scroll down.
+// Adds a border to the navbar when scrolling down.
 // Also updates the auth buttons based on login state.
  
 function initNavbar() {
@@ -274,10 +274,10 @@ function initCounters() {
  
  
 // ── Render One Event Card ─────────────────────────────────
-// Takes one event object from your Django API and builds
+// Takes one event object from the Django API and builds
 // an HTML string for the event card.
 //
-// Your Django API returns events that look like:
+// The Django API returns events that look like:
 // {
 //   id:               1,
 //   title:            "Lagos Tech Summit 2026",
@@ -493,7 +493,7 @@ function initLoginForm() {
 // ── Register ──────────────────────────────────────────────
 // POST /api/users/register/
 //
-// Your UserRegistrationSerializer requires these exact fields:
+// The UserRegistrationSerializer requires these exact fields:
 // ┌────────────┬──────────────────────────────────────────┐
 // │ username   │ unique, no spaces                        │
 // │ email      │ unique                                   │
@@ -504,7 +504,7 @@ function initLoginForm() {
 // └────────────┴──────────────────────────────────────────┘
 //
 // Returns: { id, username, email, tokens: { access, refresh } }
-// Your backend logs the user in immediately after registering.
+// Backend logs the user in immediately after registering.
  
 function initRegisterForm() {
   const form = document.getElementById('register-form');
@@ -522,7 +522,7 @@ function initRegisterForm() {
     const errEl    = document.getElementById('register-error');
  
     // ── Client-side validation ─────────────────────────────
-    // Check everything BEFORE calling the API.
+    // Checks everything BEFORE calling the API.
     // This gives instant feedback without a network round-trip.
  
     if (!username) {
