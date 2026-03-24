@@ -14,6 +14,8 @@ from datetime import timedelta
 from decouple import config, Csv
 import dj_database_url
 import os
+import sys
+sys.path.append(os.path.join('/path/to/drf_spectacular'))
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
