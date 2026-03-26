@@ -1,8 +1,6 @@
-/* ── Auth & Booking Pages ── */
-body {
-  background: var(--cream);
-  min-height: 100vh;
-}
+/* ============================================================
+   auth.css — Login / Register + Booking page styles
+   ============================================================ */
 
 .auth-main {
   min-height: 100vh;
@@ -22,6 +20,7 @@ body {
   box-shadow: 0 8px 40px rgba(14,13,12,0.06);
 }
 
+/* Logo inside auth card */
 .auth-logo {
   font-family: var(--font-display);
   font-weight: 900;
@@ -39,7 +38,7 @@ body {
   margin-bottom: 2rem;
 }
 
-/* ── Tabs ── */
+/* ── Tab switcher ── */
 .auth-tabs {
   display: flex;
   border: 1px solid var(--cream-darker);
@@ -64,16 +63,13 @@ body {
   color: var(--white);
   font-weight: 500;
 }
-.auth-tab:not(.active):hover {
-  background: var(--cream);
-  color: var(--ink);
-}
+.auth-tab:not(.active):hover { background: var(--cream); color: var(--ink); }
 
-/* ── Panels ── */
-.auth-panel { display: none; }
-.auth-panel.active { display: block; }
+/* ── Tab panels ── */
+.auth-panel         { display: none; }
+.auth-panel.active  { display: block; }
 
-/* ── Form ── */
+/* ── Form elements ── */
 .form-group {
   display: flex;
   flex-direction: column;
@@ -106,22 +102,14 @@ body {
   background: var(--white);
 }
 .form-group input::placeholder { color: var(--ink-faint); }
-.form-hint { font-size: 0.75rem; color: var(--ink-faint); }
 
-.form-error {
-  font-size: 0.82rem;
-  color: #c0392b;
-  min-height: 1.2em;
-  margin-bottom: 0.5rem;
-}
-.form-success {
-  font-size: 0.82rem;
-  color: #27ae60;
-  min-height: 1.2em;
-  margin-bottom: 0.5rem;
-  line-height: 1.5;
-}
+.form-hint  { font-size: 0.75rem; color: var(--ink-faint); }
 
+/* Error / success messages */
+.form-error   { font-size: 0.82rem; color: #c0392b; min-height: 1.2em; margin-bottom: 0.5rem; }
+.form-success { font-size: 0.82rem; color: #27ae60; min-height: 1.2em; margin-bottom: 0.5rem; line-height: 1.5; }
+
+/* Submit button — full width */
 .form-submit {
   width: 100%;
   text-align: center;

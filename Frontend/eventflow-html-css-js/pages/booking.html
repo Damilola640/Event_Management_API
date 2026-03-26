@@ -3,7 +3,8 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Book Tickets — Eventflow</title>
+  <title>Book Tickets — Evently</title>
+
   <link rel="stylesheet" href="../css/variables.css" />
   <link rel="stylesheet" href="../css/navbar.css" />
   <link rel="stylesheet" href="../css/auth.css" />
@@ -21,23 +22,37 @@
 
   <main class="auth-main">
     <div class="auth-card" style="max-width:460px">
-      <p class="auth-tagline" style="font-size:0.8rem;letter-spacing:0.08em;text-transform:uppercase;color:var(--accent);font-weight:500;margin-bottom:0.5rem">Book tickets</p>
-      <div class="auth-logo" id="booking-event-title" style="font-size:1.35rem;margin-bottom:1.5rem;font-family:var(--font-display)">Loading event…</div>
+
+      <!-- Event name filled in by JS from the API -->
+      <p class="auth-tagline" style="font-size:0.75rem;letter-spacing:0.08em;text-transform:uppercase;color:var(--accent);font-weight:500;margin-bottom:0.5rem">
+        Book tickets
+      </p>
+      <div class="auth-logo" id="booking-event-title"
+           style="font-size:1.35rem;margin-bottom:1.5rem">
+        Loading event…
+      </div>
 
       <form id="booking-form" novalidate>
+
         <div class="form-group">
           <label for="b-name">Full name</label>
-          <input type="text" id="b-name" name="name" placeholder="Your name" required />
+          <input type="text" id="b-name" name="name"
+                 placeholder="Your name" required />
         </div>
+
         <div class="form-group">
           <label for="b-email">Email address</label>
-          <input type="email" id="b-email" name="email" placeholder="you@example.com" required />
+          <input type="email" id="b-email" name="email"
+                 placeholder="you@example.com" required />
           <span class="form-hint">Your confirmation will be sent here.</span>
         </div>
+
         <div class="form-group">
           <label for="b-phone">Phone number</label>
-          <input type="tel" id="b-phone" name="phone" placeholder="+234 800 000 0000" />
+          <input type="tel" id="b-phone" name="phone"
+                 placeholder="+234 800 000 0000" />
         </div>
+
         <div class="form-group">
           <label for="b-tickets">Number of tickets</label>
           <select id="b-tickets" name="tickets">
@@ -48,11 +63,17 @@
             <option value="5">5 tickets</option>
           </select>
         </div>
-        <p id="booking-error" class="form-error" role="alert"></p>
-        <p id="booking-success" class="form-success" role="status"></p>
+
+        <p id="booking-error"   class="form-error"   role="alert"></p>
+        <p id="booking-success" class="form-success"  role="status"></p>
+
         <button type="submit" class="btn-primary form-submit">Confirm booking</button>
-        <p class="form-footer">You won't be charged until the organizer confirms your booking.</p>
+
+        <p class="form-footer">
+          You won't be charged until the organizer confirms your booking.
+        </p>
       </form>
+
     </div>
   </main>
 

@@ -1,29 +1,45 @@
+/* ============================================================
+   variables.css — Design tokens, reset, shared utilities
+   All other CSS files depend on this. Always load it first.
+   ============================================================ */
+
 @import url('https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,700;0,900;1,400;1,700&family=DM+Sans:opsz,wght@9..40,300;9..40,400;9..40,500&display=swap');
 
+/* ── Design Tokens ── */
 :root {
-  --ink: #0e0d0c;
-  --ink-muted: #5a5751;
-  --ink-faint: #a09c97;
-  --cream: #f5f0e8;
-  --cream-dark: #ede7d9;
+  /* Colours */
+  --ink:          #0e0d0c;
+  --ink-muted:    #5a5751;
+  --ink-faint:    #a09c97;
+  --cream:        #f5f0e8;
+  --cream-dark:   #ede7d9;
   --cream-darker: #e0d9ce;
-  --accent: #c8522a;
+  --accent:       #c8522a;
   --accent-light: #f0d5c8;
-  --accent-dark: #9e3e1d;
-  --gold: #c8972a;
-  --white: #fdfcfa;
+  --accent-dark:  #9e3e1d;
+  --gold:         #c8972a;
+  --white:        #fdfcfa;
+
+  /* Typography */
   --font-display: 'Playfair Display', Georgia, serif;
-  --font-body: 'DM Sans', sans-serif;
+  --font-body:    'DM Sans', sans-serif;
+
+  /* Spacing & Shape */
   --radius-sm: 0.5rem;
   --radius-md: 0.75rem;
   --radius-lg: 1.25rem;
   --radius-xl: 2rem;
-  --shadow-sm: 0 2px 12px rgba(14,13,12,0.06);
-  --shadow-md: 0 8px 40px rgba(14,13,12,0.08);
+
+  /* Shadows */
+  --shadow-sm:     0 2px 12px rgba(14,13,12,0.06);
+  --shadow-md:     0 8px 40px rgba(14,13,12,0.08);
   --shadow-accent: 0 4px 20px rgba(200,82,42,0.3);
-  --transition: 0.2s ease;
+
+  /* Transition shorthand */
+  --t: 0.2s ease;
 }
 
+/* ── Reset ── */
 *, *::before, *::after {
   box-sizing: border-box;
   margin: 0;
@@ -40,12 +56,12 @@ body {
   -webkit-font-smoothing: antialiased;
 }
 
-a { text-decoration: none; color: inherit; }
-ul { list-style: none; }
-img { max-width: 100%; display: block; }
+a    { text-decoration: none; color: inherit; }
+ul   { list-style: none; }
+img  { max-width: 100%; display: block; }
 button { font-family: var(--font-body); border: none; background: none; cursor: pointer; }
 
-/* ── Utility Classes ── */
+/* ── Shared Section Labels ── */
 .section-tag {
   font-size: 0.75rem;
   font-weight: 500;
@@ -74,6 +90,7 @@ button { font-family: var(--font-body); border: none; background: none; cursor: 
   max-width: 500px;
 }
 
+/* ── Shared Buttons ── */
 .btn-primary {
   background: var(--accent);
   color: var(--white);
@@ -82,11 +99,11 @@ button { font-family: var(--font-body); border: none; background: none; cursor: 
   font-size: 0.95rem;
   font-weight: 500;
   display: inline-block;
-  transition: background var(--transition), transform var(--transition), box-shadow var(--transition);
-  box-shadow: var(--shadow-accent);
-  cursor: pointer;
   border: none;
   font-family: var(--font-body);
+  cursor: pointer;
+  transition: background var(--t), transform var(--t), box-shadow var(--t);
+  box-shadow: var(--shadow-accent);
 }
 .btn-primary:hover {
   background: var(--accent-dark);
@@ -98,6 +115,7 @@ button { font-family: var(--font-body); border: none; background: none; cursor: 
   color: var(--ink);
   font-size: 0.95rem;
   font-weight: 400;
+  font-family: var(--font-body);
   display: inline-flex;
   align-items: center;
   gap: 6px;
@@ -105,51 +123,52 @@ button { font-family: var(--font-body); border: none; background: none; cursor: 
   border-radius: var(--radius-xl);
   border: 1px solid var(--cream-darker);
   background: var(--white);
-  transition: border-color var(--transition), transform var(--transition);
   cursor: pointer;
-  font-family: var(--font-body);
+  transition: border-color var(--t), transform var(--t);
 }
-.btn-ghost:hover {
-  border-color: var(--ink-muted);
-  transform: translateY(-2px);
-}
-.btn-ghost .arrow { transition: transform var(--transition); }
+.btn-ghost:hover { border-color: var(--ink-muted); transform: translateY(-2px); }
+.btn-ghost .arrow { transition: transform var(--t); }
 .btn-ghost:hover .arrow { transform: translateX(4px); }
 
-/* ── Reveal Animation ── */
+/* ── Scroll Reveal ── */
+/* Elements start invisible. JS adds .visible when they scroll into view. */
 .reveal {
   opacity: 0;
   transform: translateY(30px);
   transition: opacity 0.65s ease, transform 0.65s ease;
 }
-.reveal.visible { opacity: 1; transform: translateY(0); }
+.reveal.visible  { opacity: 1; transform: translateY(0); }
 .reveal-d1 { transition-delay: 0.1s; }
 .reveal-d2 { transition-delay: 0.2s; }
 .reveal-d3 { transition-delay: 0.3s; }
-.reveal-d4 { transition-delay: 0.4s; }
 
 /* ── Keyframes ── */
 @keyframes pulse {
   0%, 100% { opacity: 1; transform: scale(1); }
-  50% { opacity: 0.5; transform: scale(1.4); }
+  50%       { opacity: 0.5; transform: scale(1.4); }
 }
+
 @keyframes float {
   0%, 100% { transform: translateY(0) scale(1); }
-  50% { transform: translateY(-30px) scale(1.04); }
+  50%       { transform: translateY(-30px) scale(1.04); }
 }
+
 @keyframes fadeUp {
   from { opacity: 0; transform: translateY(24px); }
-  to { opacity: 1; transform: translateY(0); }
+  to   { opacity: 1; transform: translateY(0); }
 }
+
 @keyframes cardMain {
   0%, 100% { transform: translateX(-50%) translateY(0); }
-  50% { transform: translateX(-50%) translateY(-12px); }
+  50%       { transform: translateX(-50%) translateY(-12px); }
 }
+
 @keyframes cardBack {
   0%, 100% { transform: rotate(6deg) translateY(0); }
-  50% { transform: rotate(6deg) translateY(-8px); }
+  50%       { transform: rotate(6deg) translateY(-8px); }
 }
+
 @keyframes cardBack2 {
   0%, 100% { transform: rotate(-5deg) translateY(0); }
-  50% { transform: rotate(-5deg) translateY(-10px); }
+  50%       { transform: rotate(-5deg) translateY(-10px); }
 }

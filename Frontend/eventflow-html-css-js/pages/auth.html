@@ -3,7 +3,9 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Sign In — Eventflow</title>
+  <title>Sign In — Evently</title>
+
+  <!-- Note: paths go up one level (../) because this file is inside /pages/ -->
   <link rel="stylesheet" href="../css/variables.css" />
   <link rel="stylesheet" href="../css/navbar.css" />
   <link rel="stylesheet" href="../css/auth.css" />
@@ -12,8 +14,9 @@
 
   <div id="cursor" aria-hidden="true"></div>
 
+  <!-- Minimal navbar for auth pages -->
   <nav class="navbar" role="navigation">
-    <a href="../index.html" class="nav-logo">event<span>flow</span></a>
+    <a href="../index.html" class="nav-logo">event<span>ly</span></a>
     <div class="nav-actions">
       <a href="../index.html" class="nav-signin">← Back to home</a>
     </div>
@@ -21,70 +24,98 @@
 
   <main class="auth-main">
     <div class="auth-card">
-      <div class="auth-logo">event<span>flow</span></div>
+
+      <div class="auth-logo">event<span>ly</span></div>
       <p class="auth-tagline">Your events, beautifully managed.</p>
 
-      <!-- Tabs -->
+      <!-- Tab switcher -->
       <div class="auth-tabs" role="tablist">
-        <button class="auth-tab active" data-tab="login" role="tab" aria-selected="true">Sign in</button>
-        <button class="auth-tab" data-tab="register" role="tab" aria-selected="false">Register</button>
+        <button class="auth-tab active" data-tab="login"    role="tab" aria-selected="true">Sign in</button>
+        <button class="auth-tab"        data-tab="register" role="tab" aria-selected="false">Register</button>
       </div>
 
-      <!-- Login Panel -->
+      <!-- ── LOGIN PANEL ── -->
       <div class="auth-panel active" data-panel="login" role="tabpanel">
         <form id="login-form" novalidate>
+
           <div class="form-group">
             <label for="login-email">Email address</label>
-            <input type="email" id="login-email" name="email" placeholder="you@example.com" required autocomplete="email" />
+            <input type="email" id="login-email" name="email"
+                   placeholder="you@example.com"
+                   required autocomplete="email" />
           </div>
+
           <div class="form-group">
             <label for="login-password">Password</label>
-            <input type="password" id="login-password" name="password" placeholder="••••••••" required autocomplete="current-password" />
+            <input type="password" id="login-password" name="password"
+                   placeholder="••••••••"
+                   required autocomplete="current-password" />
           </div>
+
           <p id="login-error" class="form-error" role="alert"></p>
+
           <button type="submit" class="btn-primary form-submit">Sign in</button>
+
           <p class="form-footer"><a href="#">Forgot your password?</a></p>
         </form>
       </div>
 
-      <!-- Register Panel -->
+      <!-- ── REGISTER PANEL ── -->
       <div class="auth-panel" data-panel="register" role="tabpanel">
         <form id="register-form" novalidate>
+
           <div class="form-group">
             <label for="reg-username">Username</label>
-            <input type="text" id="reg-username" name="username" placeholder="e.g. clement_westerholf" required autocomplete="username" />
-            <span class="form-hint">Letters, numbers & underscores only.</span>
+            <input type="text" id="reg-username" name="username"
+                   placeholder="e.g. clement_obi"
+                   required autocomplete="username" />
+            <span class="form-hint">Letters, numbers and underscores only. No spaces.</span>
           </div>
 
           <div class="form-group">
             <label for="reg-name">Full name</label>
-            <input type="text" id="reg-name" name="name" placeholder="e.g. Clement Westerholf" required autocomplete="name" />
+            <input type="text" id="reg-name" name="name"
+                   placeholder="e.g. Clement Obi"
+                   required autocomplete="name" />
           </div>
+
           <div class="form-group">
             <label for="reg-email">Email address</label>
-            <input type="email" id="reg-email" name="email" placeholder="you@example.com" required autocomplete="email" />
+            <input type="email" id="reg-email" name="email"
+                   placeholder="you@example.com"
+                   required autocomplete="email" />
           </div>
+
           <div class="form-group">
             <label for="reg-password">Password</label>
-            <input type="password" id="reg-password" name="password" placeholder="Min. 8 characters" required autocomplete="new-password" />
+            <input type="password" id="reg-password" name="password"
+                   placeholder="Min. 8 characters"
+                   required autocomplete="new-password" />
           </div>
+
           <div class="form-group">
             <label for="reg-confirm">Confirm password</label>
-            <input type="password" id="reg-confirm" name="confirm" placeholder="Repeat your password" required autocomplete="new-password" />
-          <span class="form-hint">Must match the Password above.</span>
+            <input type="password" id="reg-confirm" name="confirm"
+                   placeholder="Repeat your password"
+                   required autocomplete="new-password" />
+            <span class="form-hint">Must match the password above.</span>
           </div>
 
           <p id="register-error" class="form-error" role="alert"></p>
+
           <button type="submit" class="btn-primary form-submit">Create account</button>
-          <p class="form-footer">By signing up you agree to our <a href="#">Terms</a> &amp; <a href="#">Privacy Policy</a>.</p>
-          
+
+          <p class="form-footer">
+            By signing up you agree to our
+            <a href="#">Terms</a> &amp; <a href="#">Privacy Policy</a>.
+          </p>
         </form>
       </div>
 
     </div>
   </main>
 
-  <script src="js/config.js"></script>
+  <script src="../js/config.js"></script>
   <script src="../js/evently.js"></script>
 </body>
 </html>

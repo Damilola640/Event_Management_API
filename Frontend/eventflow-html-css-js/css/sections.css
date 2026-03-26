@@ -1,3 +1,7 @@
+/* ============================================================
+   sections.css — Stats bar, Features grid, How it works
+   ============================================================ */
+
 /* ── Stats Bar ── */
 .stats-bar {
   background: var(--ink);
@@ -29,6 +33,7 @@
   padding: 7rem 3rem;
   background: var(--white);
 }
+
 .features-grid {
   display: grid;
   grid-template-columns: 1fr 1fr;
@@ -37,15 +42,17 @@
   overflow: hidden;
   margin-top: 4rem;
 }
+
 .feat {
   padding: 2.5rem;
   border: 1px solid var(--cream-darker);
-  transition: background var(--transition);
+  transition: background var(--t);
   position: relative;
   overflow: hidden;
   cursor: default;
 }
 .feat:hover { background: var(--cream); }
+
 .feat-icon {
   width: 48px; height: 48px;
   border-radius: var(--radius-md);
@@ -56,9 +63,10 @@
   margin-bottom: 1.25rem;
 }
 .feat-icon-orange { background: var(--accent-light); }
-.feat-icon-dark { background: var(--ink); }
-.feat-icon-gold { background: #faecd8; }
-.feat-icon-green { background: #e8f5e0; }
+.feat-icon-dark   { background: var(--ink); }
+.feat-icon-gold   { background: #faecd8; }
+.feat-icon-green  { background: #e8f5e0; }
+
 .feat h3 {
   font-family: var(--font-display);
   font-size: 1.15rem;
@@ -79,7 +87,7 @@
   color: var(--accent);
   font-weight: 500;
   opacity: 0;
-  transition: opacity var(--transition);
+  transition: opacity var(--t);
 }
 .feat:hover .feat-accent { opacity: 1; }
 
@@ -88,22 +96,18 @@
   padding: 7rem 3rem;
   background: var(--cream);
 }
-.how-inner {
-  max-width: 900px;
-  margin: 0 auto;
-}
-.how-header {
-  text-align: center;
-  margin-bottom: 4rem;
-}
+.how-inner { max-width: 900px; margin: 0 auto; }
+.how-header { text-align: center; margin-bottom: 4rem; }
 .how-header .section-tag,
 .how-header .section-h2 { text-align: center; }
+
 .steps {
   display: grid;
   grid-template-columns: repeat(3, 1fr);
   gap: 2rem;
   position: relative;
 }
+/* Connecting line between step circles */
 .steps::before {
   content: '';
   position: absolute;
@@ -113,7 +117,9 @@
   height: 1px;
   background: linear-gradient(to right, var(--accent), var(--gold));
 }
+
 .step { text-align: center; position: relative; }
+
 .step-num {
   width: 56px; height: 56px;
   border-radius: 50%;
@@ -134,6 +140,7 @@
   background: var(--ink);
   box-shadow: 0 4px 20px rgba(14,13,12,0.2);
 }
+
 .step h3 {
   font-family: var(--font-display);
   font-size: 1rem;
@@ -147,10 +154,13 @@
   font-weight: 300;
 }
 
+/* ── Responsive ── */
 @media (max-width: 768px) {
   .stats-bar { grid-template-columns: repeat(2, 1fr); padding: 2rem 1.25rem; }
+
   .features { padding: 4rem 1.25rem; }
   .features-grid { grid-template-columns: 1fr; }
+
   .how { padding: 4rem 1.25rem; }
   .steps { grid-template-columns: 1fr; }
   .steps::before { display: none; }

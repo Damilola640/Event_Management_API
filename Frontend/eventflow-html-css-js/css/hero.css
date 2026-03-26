@@ -1,4 +1,7 @@
-/* ── Hero ── */
+/* ============================================================
+   hero.css — Hero section + floating card stack
+   ============================================================ */
+
 .hero {
   min-height: 100vh;
   display: grid;
@@ -9,6 +12,7 @@
   overflow: hidden;
 }
 
+/* Background decorative blobs */
 .hero-bg-shape {
   position: absolute;
   right: -8rem; top: -8rem;
@@ -30,6 +34,7 @@
   pointer-events: none;
 }
 
+/* Left column — text content */
 .hero-left {
   position: relative;
   z-index: 2;
@@ -85,7 +90,7 @@
   flex-wrap: wrap;
 }
 
-/* ── Hero Card Stack ── */
+/* Right column — floating cards */
 .hero-right {
   position: relative;
   z-index: 2;
@@ -100,6 +105,7 @@
   height: 440px;
 }
 
+/* Base card style */
 .hcard {
   position: absolute;
   background: var(--white);
@@ -108,6 +114,8 @@
   padding: 1.25rem;
   box-shadow: var(--shadow-md);
 }
+
+/* Three cards at different depths + rotations */
 .hcard-main {
   width: 300px;
   bottom: 0; left: 50%;
@@ -127,6 +135,7 @@
   animation: cardBack2 7s 4s ease-in-out infinite;
 }
 
+/* Card internals */
 .hcard-label {
   font-size: 0.7rem;
   font-weight: 500;
@@ -195,6 +204,7 @@
 }
 .hcard-avatar:first-child { margin-left: 0; }
 
+/* ── Responsive ── */
 @media (max-width: 768px) {
   .hero {
     grid-template-columns: 1fr;
