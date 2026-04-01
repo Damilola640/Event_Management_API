@@ -1,0 +1,21 @@
+{
+    "name": "eventflow-frontend",
+    "version": "1.0.0",
+    "description": "Frontend for EventFlow application. Vanilla HTML, CSS, JavaScript wired into the EventFlow Django REST API",
+    "author": "Clement",
+    "license": "MIT",
+    "private": "true",
+    "scripts": {
+        "start": "live-server --port=3000 --open=index.html",
+        "dev": "live-server --port=3000 --open=index.html",
+        "preview": "live-server --port=3000 --open=index.html",
+        "build": "live-server --port=3000 --open=index.html",
+        "lint": "eslint js/eventflow.js js/config.js",
+        "format": "prettier --write \"**/*.{html,css,js}\""
+    },
+    "devDependencies": {
+        "live-server": "^1.2.2",
+        "eslint": "^8.57.0",
+        "prettier": "^3.3.2"
+    }
+}
