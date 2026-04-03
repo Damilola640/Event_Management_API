@@ -9,7 +9,7 @@ click-plugins==1.1.1.2
 click-repl==0.3.0
 cron_descriptor==2.0.6
 dj-database-url==3.0.1
-Django==5.2.13
+Django==5.2.12
 django-celery-beat==2.8.1
 django-cors-headers==4.9.0
 django-filter==25.1
@@ -24,7 +24,7 @@ jsonschema-specifications==2025.9.1
 kombu==5.5.4
 packaging==25.0
 prompt_toolkit==3.0.52
-PyJWT==3.0.1
+PyJWT==2.12.1
 python-crontab==3.3.0
 python-dateutil==2.9.0.post0
 python-decouple==3.8
