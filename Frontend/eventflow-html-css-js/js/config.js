@@ -7,3 +7,8 @@
    ============================================================ */
 
 const API_BASE = 'http://127.0.0.1:8000';
+
+window.API_BASE = API_BASE;
+window.EventFlowConfig = Object.freeze({
+  API_BASE,
+});
