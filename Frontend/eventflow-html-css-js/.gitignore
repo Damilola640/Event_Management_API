@@ -80,3 +80,6 @@ celerybeat.pid
 # OS-generated files
 .DS_Store
 Thumbs.db
+
+# Lock json files
+package-lock.json
