@@ -9,21 +9,73 @@
 // You get one when you log in. You show it on every
 // request to prove "I am allowed to be here."
 
-function getAccessToken()  { return localStorage.getItem('access_token');  }
-function getRefreshToken() { return localStorage.getItem('refresh_token'); }
+function getCookieValue(name) {
+  const prefix = `${name}=`;
+  const cookies = document.cookie ? document.cookie.split('; ') : [];
+
+  for (const cookie of cookies) {
+    if (cookie.startsWith(prefix)) {
+      return decodeURIComponent(cookie.slice(prefix.length));
+    }
+  }
+
+  return null;
+}
+
+function setCookieValue(name, value, maxAgeSeconds) {
+  if (!value) return;
+
+  const options = [`Path=/`, `SameSite=Lax`, `Max-Age=${maxAgeSeconds}`];
+  if (window.location.protocol === 'https:') {
+    options.push('Secure');
+  }
+
+  document.cookie = [
+    `${name}=${encodeURIComponent(value)}`,
+    options.join('; '),
+  ].join('; ');
+}
+
+function deleteCookieValue(name) {
+  document.cookie = `${name}=; Path=/; Max-Age=0; SameSite=Lax`;
+}
+
+function getAccessToken()  {
+  return window.EventFlowStorage
+    ? window.EventFlowStorage.getAccessToken()
+    : getCookieValue('access_token');
+}
+
+function getRefreshToken() {
+  return window.EventFlowStorage
+    ? window.EventFlowStorage.getRefreshToken()
+    : getCookieValue('refresh_token');
+}
 
 function saveTokens(access, refresh) {
-  localStorage.setItem('access_token',  access);
-  localStorage.setItem('refresh_token', refresh);
+  if (window.EventFlowStorage) {
+    window.EventFlowStorage.saveTokens(access, refresh);
+    return;
+  }
+
+  setCookieValue('access_token', access, 60 * 5);
+  setCookieValue('refresh_token', refresh, 60 * 60 * 24);
 }
 
 function clearTokens() {
-  localStorage.removeItem('access_token');
-  localStorage.removeItem('refresh_token');
+  if (window.EventFlowStorage) {
+    window.EventFlowStorage.clearTokens();
+    return;
+  }
+
+  deleteCookieValue('access_token');
+  deleteCookieValue('refresh_token');
 }
 
 function isLoggedIn() {
-  return !!getAccessToken();
+  return window.EventFlowStorage
+    ? window.EventFlowStorage.hasSession()
+    : !!getAccessToken();
 }
 
 
@@ -33,6 +85,11 @@ function isLoggedIn() {
 // so the user is never randomly kicked out mid-session.
 
 async function refreshAccessToken() {
+  if (window.EventFlowAuthApi) {
+    const data = await window.EventFlowAuthApi.refreshToken();
+    return data?.access || null;
+  }
+
   const refresh = getRefreshToken();
   if (!refresh) return null;
 
@@ -51,7 +108,11 @@ async function refreshAccessToken() {
 
     const data = await res.json();
     // Save the brand new access token
-    localStorage.setItem('access_token', data.access);
+    if (window.EventFlowStorage) {
+      window.EventFlowStorage.setAccessToken(data.access);
+    } else {
+      setCookieValue('access_token', data.access, 60 * 5);
+    }
     return data.access;
 
   } catch {
@@ -462,15 +523,19 @@ function initLoginForm() {
     try {
       // POST http://127.0.0.1:8000/api/users/token/
       // Returns: { "access": "eyJ...", "refresh": "eyJ..." }
-      const data = await apiFetch(`${API_BASE}/api/users/token/`, {
-        method: 'POST',
-        body:   JSON.stringify({ email, password }),
-      });
+      const data = window.EventFlowAuthApi
+        ? await window.EventFlowAuthApi.login({ email, password })
+        : await apiFetch(`${API_BASE}/api/users/token/`, {
+            method: 'POST',
+            body: JSON.stringify({ email, password }),
+          });
 
-      // Save both tokens into the browser's localStorage
+      // Save both tokens into browser cookies
       // access_token  = short-lived key for API requests (5 mins)
       // refresh_token = long-lived key to silently get new access tokens (1 day)
-      saveTokens(data.access, data.refresh);
+      if (!window.EventFlowAuthApi) {
+        saveTokens(data.access, data.refresh);
+      }
 
       // Redirect to homepage — now logged in
       window.location.href = '../index.html';
@@ -565,17 +630,26 @@ function initRegisterForm() {
 
     try {
       // POST http://127.0.0.1:8000/api/users/register/
-      const data = await apiFetch(`${API_BASE}/api/users/register/`, {
-        method: 'POST',
-        body: JSON.stringify({
-          username,
-          email,
-          first_name: firstName,
-          last_name:  lastName,
-          password,
-          password2:  confirm,  // Django validates this server-side too
-        }),
-      });
+      const data = window.EventFlowAuthApi
+        ? await window.EventFlowAuthApi.register({
+            username,
+            email,
+            firstName,
+            lastName,
+            password,
+            confirmPassword: confirm,
+          })
+        : await apiFetch(`${API_BASE}/api/users/register/`, {
+            method: 'POST',
+            body: JSON.stringify({
+              username,
+              email,
+              first_name: firstName,
+              last_name: lastName,
+              password,
+              password2: confirm,  // Django validates this server-side too
+            }),
+          });
 
       // ── Backend returns tokens immediately on register ─────
       // data = {
@@ -588,7 +662,9 @@ function initRegisterForm() {
       //   }
       // }
       if (data.tokens?.access) {
-        saveTokens(data.tokens.access, data.tokens.refresh);
+        if (!window.EventFlowAuthApi) {
+          saveTokens(data.tokens.access, data.tokens.refresh);
+        }
         // Logged in straight away — go to homepage
         window.location.href = '../index.html';
 
@@ -656,7 +732,7 @@ async function initBookingForm() {
     // User must be logged in to book
     if (!isLoggedIn()) {
       // Save where they were trying to go, then send to login
-      window.location.href = `auth.html?next=booking.html?slug=${slug}`;
+      window.location.href = `auth.html?next=${encodeURIComponent(`booking.html?slug=${slug}`)}`;
       return;
     }
 
@@ -725,6 +801,12 @@ function initSmoothScroll() {
 // ── Boot ──────────────────────────────────────────────────
 // This runs once when the browser has fully loaded the page HTML.
 // It starts every feature above.
+
+// Auth page behavior now lives in js/pages/auth.js.
+// These no-op overrides keep the shared bundle from binding auth handlers.
+function initAuthTabs() {}
+function initLoginForm() {}
+function initRegisterForm() {}
 
 document.addEventListener('DOMContentLoaded', () => {
   initCursor();       // custom mouse cursor
