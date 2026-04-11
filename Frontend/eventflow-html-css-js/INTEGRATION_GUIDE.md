@@ -5,9 +5,9 @@ This guide is tailored to the current project structure:
 - Backend: `event_planner/`
 - Frontend: `Frontend/eventflow-html-css-js/`
 
-It is designed to help you integrate the Django EventFlow API into the frontend using a clean, maintainable structure.
+It is designed to help integrate the Django EventFlow API into the frontend using a clean, maintainable structure.
 
-## 1. Understand the API you already have
+## 1. Understanding the API we already had
 
 Your backend routes currently live in:
 
@@ -15,7 +15,7 @@ Your backend routes currently live in:
 - `event_planner/users/urls.py`
 - `event_planner/events/urls.py`
 
-Main endpoints you will likely use first:
+Main endpoints likely to be used first:
 
 - `POST /api/users/register/`
 - `POST /api/users/token/`
@@ -28,7 +28,7 @@ Main endpoints you will likely use first:
 - `GET /api/events/tags/`
 - `GET /api/events/venues/`
 
-You can inspect the full schema at:
+The full schema can be inspected at:
 
 - `/api/docs/`
 - `/api/schema/`
@@ -44,7 +44,7 @@ Right now, `js/eventflow.js` contains many responsibilities in one file:
 - page boot logic
 - UI effects
 
-That works for a small prototype, but it becomes hard to maintain as soon as you add dashboard pages, profile editing, event creation, filtering, and organizer-only actions.
+That works for a small prototype, but it becomes hard to maintain as soon as dashboard pages are added, profile editing, event creation, filtering, and organizer-only actions.
 
 Use this structure instead:
 
@@ -84,11 +84,11 @@ Use this rule:
 - `pages/` files should only handle page behavior and DOM updates.
 - `ui/` files should render components like cards, lists, badges, and alerts.
 
-This separation keeps your code clean and prevents fetch logic from being mixed into button click handlers everywhere.
+This separation keeps our code clean and prevents fetch logic from being mixed into button click handlers everywhere.
 
 ## 4. Centralize the API base URL
 
-You already have `js/config.js`, which is good.
+We already had `js/config.js`, which is good.
 
 Keep only environment-level values there:
 
@@ -156,23 +156,23 @@ Functions:
 
 ## 7. Add a mapping layer because your backend shape and frontend shape do not fully match
 
-This is the most important part for your project.
+This is the most important part for the project.
 
-Your current frontend code expects fields like:
+Our current frontend code expects fields like:
 
 - `title`
 - `capacity`
 - `registered_count`
 - `category.name`
 
-But your backend serializer currently returns fields like:
+But our backend serializer currently returns fields like:
 
 - `name`
 - `max_attendees`
 - `categories`
 - `venue` as a name string
 
-So if you connect them directly without a mapping layer, parts of the UI will break.
+So if we connect them directly without a mapping layer, parts of the UI will break.
 
 Use a mapper in `services/event.service.js`.
 
@@ -200,12 +200,12 @@ export function mapEventFromApi(event) {
 
 Hint:
 
-- Do not force your UI to depend on raw backend fields everywhere.
+- Do not force the UI to depend on raw backend fields everywhere.
 - Convert once in the service layer, then use the cleaner frontend model across the page.
 
 ## 8. Wire pages one by one
 
-Do not integrate everything at once. Use this order.
+Do not integrate everything at once. Use this order instead.
 
 ### Step 1: Home page events list
 
