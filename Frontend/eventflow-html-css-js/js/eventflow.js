@@ -443,7 +443,9 @@ async function loadEvents() {
 
   try {
     // GET http://127.0.0.1:8000/api/events/
-    const data   = await apiFetch(`${API_BASE}/api/events/`);
+    const data = window.EventFlowEventsApi
+      ? await window.EventFlowEventsApi.getEvents()
+      : await apiFetch(`${API_BASE}/api/events/`);
 
     // Handle both paginated ({ results: [...] }) and plain array responses
     const events = Array.isArray(data) ? data : (data.results || []);
@@ -718,8 +720,10 @@ async function initBookingForm() {
   // Load and display the event name at top of the form
   try {
     // GET http://127.0.0.1:8000/api/events/lagos-tech-summit-2026/
-    const event = await apiFetch(`${API_BASE}/api/events/${slug}/`);
-    if (titleEl) titleEl.textContent = event.title;
+    const event = window.EventFlowEventsApi
+      ? await window.EventFlowEventsApi.getEventBySlug(slug)
+      : await apiFetch(`${API_BASE}/api/events/${slug}/`);
+    if (titleEl) titleEl.textContent = event.title || event.name || 'Event details';
   } catch {
     if (titleEl) titleEl.textContent = 'Event not found.';
     return;
@@ -749,10 +753,14 @@ async function initBookingForm() {
       // POST http://127.0.0.1:8000/api/events/lagos-tech-summit-2026/register/
       // Header: Authorization: Bearer <access_token>
       // Body: {} — Django gets the user identity from the token
-      await apiFetch(`${API_BASE}/api/events/${slug}/register/`, {
-        method: 'POST',
-        body:   JSON.stringify({}),
-      });
+      if (window.EventFlowEventsApi) {
+        await window.EventFlowEventsApi.registerForEvent(slug);
+      } else {
+        await apiFetch(`${API_BASE}/api/events/${slug}/register/`, {
+          method: 'POST',
+          body:   JSON.stringify({}),
+        });
+      }
 
       // Show success message
       if (succEl) {

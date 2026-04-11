@@ -52,14 +52,8 @@
     return payload;
   }
 
-  async function request(path, options = {}) {
-    const {
-      method = 'GET',
-      body,
-      headers = {},
-      auth = false,
-      token,
-    } = options;
+  async function sendRequest(path, options, authToken) {
+    const { method = 'GET', body, headers = {} } = options;
 
     const finalHeaders = {
       ...headers,
@@ -70,11 +64,8 @@
       headers: finalHeaders,
     };
 
-    if (auth) {
-      const accessToken = token || global.EventFlowStorage?.getAccessToken?.();
-      if (accessToken) {
-        finalHeaders.Authorization = `Bearer ${accessToken}`;
-      }
+    if (authToken) {
+      finalHeaders.Authorization = `Bearer ${authToken}`;
     }
 
     if (body !== undefined) {
@@ -82,7 +73,31 @@
       finalOptions.body = JSON.stringify(body);
     }
 
-    const response = await fetch(buildUrl(path), finalOptions);
+    return fetch(buildUrl(path), finalOptions);
+  }
+
+  async function request(path, options = {}) {
+    const {
+      auth = false,
+      token,
+    } = options;
+
+    let accessToken = null;
+    if (auth) {
+      accessToken = token || global.EventFlowStorage?.getAccessToken?.();
+    }
+
+    let response = await sendRequest(path, options, accessToken);
+
+    if (auth && response.status === 401 && !token) {
+      const refreshed = await global.EventFlowAuthApi?.refreshToken?.();
+      const nextAccessToken = refreshed?.access || global.EventFlowStorage?.getAccessToken?.();
+
+      if (nextAccessToken) {
+        response = await sendRequest(path, options, nextAccessToken);
+      }
+    }
+
     return parseResponse(response);
   }
 
