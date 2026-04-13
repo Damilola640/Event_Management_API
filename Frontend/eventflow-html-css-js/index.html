@@ -434,14 +434,20 @@
 
   <!--
     Scripts at bottom of body so HTML renders it first.
-    config.js comes before eventflow.js — it defines API_BASE.
+    config.js comes first so the modular frontend can share API_BASE.
   -->
   <script src="js/config.js"></script>
   <script src="js/utils/storage.js"></script>
+  <script src="js/utils/formatters.js"></script>
   <script src="js/api/client.js"></script>
   <script src="js/api/events.api.js"></script>
   <script src="js/api/auth.api.js"></script>
-  <script src="js/eventflow.js"></script>
+  <script src="js/api/users.api.js"></script>
+  <script src="js/services/auth.service.js"></script>
+  <script src="js/services/event.service.js"></script>
+  <script src="js/ui/site-ui.js"></script>
+  <script src="js/ui/event-card.js"></script>
+  <script src="js/pages/home.js"></script>
 
 </body>
 </html>
