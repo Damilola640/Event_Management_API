@@ -118,6 +118,4 @@
     loadProfile,
     renderProfile,
   };
-
-  document.addEventListener('DOMContentLoaded', boot);
 })(window);

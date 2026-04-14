@@ -58,6 +58,4 @@
     boot,
     loadEvents,
   };
-
-  document.addEventListener('DOMContentLoaded', boot);
 })(window);

@@ -190,6 +190,4 @@
   global.initLoginForm = initLoginForm;
   global.initRegisterForm = initRegisterForm;
   global.EventFlowAuthPage = { boot };
-
-  document.addEventListener('DOMContentLoaded', boot);
 })(window);

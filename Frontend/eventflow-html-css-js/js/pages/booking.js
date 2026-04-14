@@ -140,6 +140,4 @@
     loadSelectedEvent,
     setEventSummary,
   };
-
-  document.addEventListener('DOMContentLoaded', boot);
 })(window);
