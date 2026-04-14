@@ -24,8 +24,14 @@
   }
 
   function activateTab(target) {
+    const wrapper = document.getElementById('authWrapper');
     const tabs = document.querySelectorAll('.auth-tab');
     const panels = document.querySelectorAll('.auth-panel');
+    const isRegister = target === 'register';
+
+    if (wrapper) {
+      wrapper.classList.toggle('panel-active', isRegister);
+    }
 
     tabs.forEach((tab) => {
       const isActive = tab.dataset.tab === target;
@@ -40,6 +46,8 @@
 
   function initAuthTabs() {
     const tabs = document.querySelectorAll('.auth-tab');
+    const mobileRegisterBtn = document.getElementById('mobileRegisterBtn');
+    const mobileLoginBtn = document.getElementById('mobileLoginBtn');
     if (!tabs.length) return;
     if (document.body.dataset.authTabsBound === 'true') return;
     document.body.dataset.authTabsBound = 'true';
@@ -54,6 +62,9 @@
         activateTab(tab.dataset.tab);
       });
     });
+
+    mobileRegisterBtn?.addEventListener('click', () => activateTab('register'));
+    mobileLoginBtn?.addEventListener('click', () => activateTab('login'));
   }
 
   function setMessage(element, message, color) {

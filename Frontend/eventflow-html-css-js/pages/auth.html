@@ -14,7 +14,6 @@
 
   <div id="cursor" aria-hidden="true"></div>
 
-  <!-- Minimal navbar for auth pages -->
   <nav class="navbar" role="navigation">
     <a href="../index.html" class="nav-logo">event<span>flow</span></a>
     <div class="nav-actions">
@@ -23,95 +22,128 @@
   </nav>
 
   <main class="auth-main">
-    <div class="auth-card">
+    <div class="auth-shell">
+      <div class="auth-wrapper" id="authWrapper">
+        <div class="auth-form-box register-form-box auth-panel" data-panel="register" role="tabpanel">
+          <form id="register-form" novalidate>
+            <div class="auth-brand-mark">event<span>flow</span></div>
+            <h1>Create Account</h1>
+            <div class="social-links" aria-label="Social signup options">
+              <a href="#" aria-label="Facebook"><span>f</span></a>
+              <a href="#" aria-label="Google"><span>G</span></a>
+              <a href="#" aria-label="LinkedIn"><span>in</span></a>
+            </div>
+            <span class="auth-helper">or use your email to get started</span>
 
-      <div class="auth-logo">event<span>flow</span></div>
-      <p class="auth-tagline">Your events, beautifully managed.</p>
+            <div class="form-group">
+              <label for="reg-username">Username</label>
+              <input type="text" id="reg-username" name="username"
+                     placeholder="e.g. clement_obi"
+                     required autocomplete="username" />
+              <span class="form-hint">Letters, numbers and underscores only. No spaces.</span>
+            </div>
 
-      <!-- Tab switcher -->
-      <div class="auth-tabs" role="tablist">
-        <button class="auth-tab active" data-tab="login"    role="tab" aria-selected="true">Sign in</button>
-        <button class="auth-tab"        data-tab="register" role="tab" aria-selected="false">Register</button>
+            <div class="form-group">
+              <label for="reg-name">Full name</label>
+              <input type="text" id="reg-name" name="name"
+                     placeholder="e.g. Clement Obi"
+                     required autocomplete="name" />
+            </div>
+
+            <div class="form-group">
+              <label for="reg-email">Email address</label>
+              <input type="email" id="reg-email" name="email"
+                     placeholder="you@example.com"
+                     required autocomplete="email" />
+            </div>
+
+            <div class="form-group">
+              <label for="reg-password">Password</label>
+              <input type="password" id="reg-password" name="password"
+                     placeholder="Min. 8 characters"
+                     required autocomplete="new-password" />
+            </div>
+
+            <div class="form-group">
+              <label for="reg-confirm">Confirm password</label>
+              <input type="password" id="reg-confirm" name="confirm"
+                     placeholder="Repeat your password"
+                     required autocomplete="new-password" />
+              <span class="form-hint">Must match the password above.</span>
+            </div>
+
+            <p id="register-error" class="form-error" role="alert"></p>
+
+            <button type="submit" class="btn-primary form-submit">Create account</button>
+
+            <p class="form-footer">
+              By signing up you agree to our
+              <a href="#">Terms</a> &amp; <a href="#">Privacy Policy</a>.
+            </p>
+
+            <div class="mobile-switch">
+              <p>Already have an account?</p>
+              <button type="button" id="mobileLoginBtn" class="mobile-switch-btn">Sign in</button>
+            </div>
+          </form>
+        </div>
+
+        <div class="auth-form-box login-form-box auth-panel active" data-panel="login" role="tabpanel">
+          <form id="login-form" novalidate>
+            <div class="auth-brand-mark">event<span>flow</span></div>
+            <h1>Sign In</h1>
+            <div class="social-links" aria-label="Social sign-in options">
+              <a href="#" aria-label="Facebook"><span>f</span></a>
+              <a href="#" aria-label="Google"><span>G</span></a>
+              <a href="#" aria-label="LinkedIn"><span>in</span></a>
+            </div>
+            <span class="auth-helper">or use your Eventflow account</span>
+
+            <div class="form-group">
+              <label for="login-email">Email address</label>
+              <input type="email" id="login-email" name="email"
+                     placeholder="you@example.com"
+                     required autocomplete="email" />
+            </div>
+
+            <div class="form-group">
+              <label for="login-password">Password</label>
+              <input type="password" id="login-password" name="password"
+                     placeholder="••••••••"
+                     required autocomplete="current-password" />
+            </div>
+
+            <a href="#" class="auth-inline-link">Forgot your password?</a>
+
+            <p id="login-error" class="form-error" role="alert"></p>
+
+            <button type="submit" class="btn-primary form-submit">Sign in</button>
+
+            <div class="mobile-switch">
+              <p>Don't have an account?</p>
+              <button type="button" id="mobileRegisterBtn" class="mobile-switch-btn">Sign up</button>
+            </div>
+          </form>
+        </div>
+
+        <div class="slide-panel-wrapper" aria-hidden="true">
+          <div class="slide-panel">
+            <div class="panel-content panel-content-left">
+              <div class="panel-brand">event<span>flow</span></div>
+              <h2>Welcome back!</h2>
+              <p>Sign in to manage your events, track registrations, and keep every attendee touchpoint running smoothly.</p>
+              <button type="button" class="transparent-btn auth-tab" id="loginBtn" data-tab="login" aria-selected="true">Sign in</button>
+            </div>
+
+            <div class="panel-content panel-content-right">
+              <div class="panel-brand">event<span>flow</span></div>
+              <h2>Hey there!</h2>
+              <p>Create your account to publish events, manage bookings, and grow your audience from one beautiful dashboard.</p>
+              <button type="button" class="transparent-btn auth-tab" id="registerBtn" data-tab="register" aria-selected="false">Sign up</button>
+            </div>
+          </div>
+        </div>
       </div>
-
-      <!-- ── LOGIN PANEL ── -->
-      <div class="auth-panel active" data-panel="login" role="tabpanel">
-        <form id="login-form" novalidate>
-
-          <div class="form-group">
-            <label for="login-email">Email address</label>
-            <input type="email" id="login-email" name="email"
-                   placeholder="you@example.com"
-                   required autocomplete="email" />
-          </div>
-
-          <div class="form-group">
-            <label for="login-password">Password</label>
-            <input type="password" id="login-password" name="password"
-                   placeholder="••••••••"
-                   required autocomplete="current-password" />
-          </div>
-
-          <p id="login-error" class="form-error" role="alert"></p>
-
-          <button type="submit" class="btn-primary form-submit">Sign in</button>
-
-          <p class="form-footer"><a href="#">Forgot your password?</a></p>
-        </form>
-      </div>
-
-      <!-- ── REGISTER PANEL ── -->
-      <div class="auth-panel" data-panel="register" role="tabpanel">
-        <form id="register-form" novalidate>
-
-          <div class="form-group">
-            <label for="reg-username">Username</label>
-            <input type="text" id="reg-username" name="username"
-                   placeholder="e.g. clement_obi"
-                   required autocomplete="username" />
-            <span class="form-hint">Letters, numbers and underscores only. No spaces.</span>
-          </div>
-
-          <div class="form-group">
-            <label for="reg-name">Full name</label>
-            <input type="text" id="reg-name" name="name"
-                   placeholder="e.g. Clement Obi"
-                   required autocomplete="name" />
-          </div>
-
-          <div class="form-group">
-            <label for="reg-email">Email address</label>
-            <input type="email" id="reg-email" name="email"
-                   placeholder="you@example.com"
-                   required autocomplete="email" />
-          </div>
-
-          <div class="form-group">
-            <label for="reg-password">Password</label>
-            <input type="password" id="reg-password" name="password"
-                   placeholder="Min. 8 characters"
-                   required autocomplete="new-password" />
-          </div>
-
-          <div class="form-group">
-            <label for="reg-confirm">Confirm password</label>
-            <input type="password" id="reg-confirm" name="confirm"
-                   placeholder="Repeat your password"
-                   required autocomplete="new-password" />
-            <span class="form-hint">Must match the password above.</span>
-          </div>
-
-          <p id="register-error" class="form-error" role="alert"></p>
-
-          <button type="submit" class="btn-primary form-submit">Create account</button>
-
-          <p class="form-footer">
-            By signing up you agree to our
-            <a href="#">Terms</a> &amp; <a href="#">Privacy Policy</a>.
-          </p>
-        </form>
-      </div>
-
     </div>
   </main>
 
