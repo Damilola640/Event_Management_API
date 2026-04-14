@@ -1,0 +1,125 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>My Profile — Eventflow</title>
+
+  <link rel="stylesheet" href="../css/variables.css" />
+  <link rel="stylesheet" href="../css/navbar.css" />
+  <link rel="stylesheet" href="../css/auth.css" />
+</head>
+<body>
+
+  <div id="cursor" aria-hidden="true"></div>
+
+  <nav class="navbar" role="navigation">
+    <a href="../index.html" class="nav-logo">event<span>flow</span></a>
+    <div class="nav-actions">
+      <a href="../index.html" class="nav-signin">← Back to home</a>
+    </div>
+  </nav>
+
+  <main class="auth-main">
+    <div class="auth-card" style="max-width:560px">
+      <p class="auth-tagline"
+         style="font-size:0.75rem;letter-spacing:0.08em;text-transform:uppercase;color:var(--accent);font-weight:500;margin-bottom:0.5rem">
+        Account settings
+      </p>
+
+      <div class="auth-logo" style="font-size:1.5rem;margin-bottom:0.5rem">
+        <span id="profile-name">Loading profile...</span>
+      </div>
+      <p class="auth-tagline" style="margin-bottom:1.5rem">
+        Keep your Eventflow details up to date so bookings and event communication stay smooth.
+      </p>
+
+      <div style="display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:0.9rem;margin-bottom:1.5rem">
+        <div style="padding:0.9rem 1rem;border:1px solid var(--cream-darker);border-radius:var(--radius-md);background:var(--cream)">
+          <div style="font-size:0.72rem;text-transform:uppercase;letter-spacing:0.08em;color:var(--ink-faint);margin-bottom:0.3rem">Email</div>
+          <div id="profile-email" data-profile-email style="font-size:0.95rem;color:var(--ink)">Loading...</div>
+        </div>
+        <div style="padding:0.9rem 1rem;border:1px solid var(--cream-darker);border-radius:var(--radius-md);background:var(--cream)">
+          <div style="font-size:0.72rem;text-transform:uppercase;letter-spacing:0.08em;color:var(--ink-faint);margin-bottom:0.3rem">Role</div>
+          <div id="profile-role" data-profile-role style="font-size:0.95rem;color:var(--ink)">Loading...</div>
+        </div>
+        <div style="padding:0.9rem 1rem;border:1px solid var(--cream-darker);border-radius:var(--radius-md);background:var(--cream)">
+          <div style="font-size:0.72rem;text-transform:uppercase;letter-spacing:0.08em;color:var(--ink-faint);margin-bottom:0.3rem">Username</div>
+          <div id="profile-username" data-profile-username style="font-size:0.95rem;color:var(--ink)">Loading...</div>
+        </div>
+        <div style="padding:0.9rem 1rem;border:1px solid var(--cream-darker);border-radius:var(--radius-md);background:var(--cream)">
+          <div style="font-size:0.72rem;text-transform:uppercase;letter-spacing:0.08em;color:var(--ink-faint);margin-bottom:0.3rem">Display name</div>
+          <div data-profile-name style="font-size:0.95rem;color:var(--ink)">Loading...</div>
+        </div>
+      </div>
+
+      <form id="profile-form" novalidate>
+        <div class="form-group">
+          <label for="profile-username-input">Username</label>
+          <input
+            type="text"
+            id="profile-username-input"
+            name="username"
+            placeholder="Choose a username"
+            autocomplete="username"
+          />
+        </div>
+
+        <div class="form-group">
+          <label for="profile-email-input">Email address</label>
+          <input
+            type="email"
+            id="profile-email-input"
+            name="email"
+            placeholder="you@example.com"
+            autocomplete="email"
+          />
+        </div>
+
+        <div style="display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:1rem">
+          <div class="form-group">
+            <label for="profile-first-name-input">First name</label>
+            <input
+              type="text"
+              id="profile-first-name-input"
+              name="first_name"
+              placeholder="First name"
+              autocomplete="given-name"
+            />
+          </div>
+
+          <div class="form-group">
+            <label for="profile-last-name-input">Last name</label>
+            <input
+              type="text"
+              id="profile-last-name-input"
+              name="last_name"
+              placeholder="Last name"
+              autocomplete="family-name"
+            />
+          </div>
+        </div>
+
+        <p id="profile-error" class="form-error" role="alert"></p>
+        <p id="profile-success" class="form-success" role="status"></p>
+
+        <button type="submit" class="btn-primary form-submit">Save changes</button>
+
+        <p class="form-footer">
+          Your profile helps organizers and attendees recognize you across bookings, invites, and team activity.
+        </p>
+      </form>
+    </div>
+  </main>
+
+  <script src="../js/config.js"></script>
+  <script src="../js/utils/storage.js"></script>
+  <script src="../js/api/client.js"></script>
+  <script src="../js/api/auth.api.js"></script>
+  <script src="../js/api/users.api.js"></script>
+  <script src="../js/services/auth.service.js"></script>
+  <script src="../js/utils/guards.js"></script>
+  <script src="../js/ui/site-ui.js"></script>
+  <script src="../js/pages/profile.js"></script>
+</body>
+</html>

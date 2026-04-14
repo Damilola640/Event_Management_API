@@ -23,15 +23,21 @@
   }
 
   function updateNavbarAuthState() {
-    const signinLink = document.querySelector('.nav-signin');
-    const ctaLink = document.querySelector('.nav-cta');
+    const signinLink = document.querySelector('[data-auth-link]');
+    const ctaLink = document.querySelector('[data-auth-cta]');
+    const mobileAuthLink = document.querySelector('[data-mobile-auth-link]');
     const authService = global.EventFlowAuthService;
 
     if (!signinLink || !authService?.isLoggedIn) return;
 
     if (authService.isLoggedIn()) {
-      signinLink.textContent = 'Dashboard';
-      signinLink.href = 'http://127.0.0.1:8000/admin/';
+      signinLink.textContent = 'My profile';
+      signinLink.href = 'pages/profile.html';
+
+      if (mobileAuthLink) {
+        mobileAuthLink.textContent = 'My profile';
+        mobileAuthLink.href = 'pages/profile.html';
+      }
 
       if (ctaLink) {
         ctaLink.textContent = 'Log out';
