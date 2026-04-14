@@ -120,7 +120,7 @@
 
   async function boot() {
     siteUi?.initCursor?.();
-    siteUi?.initNavbar?.();
+    global.EventFlowNavbar?.initNavbar?.();
 
     const slug = getSlugFromUrl();
     const bookingForm = document.getElementById('booking-form');

@@ -101,7 +101,7 @@
 
   async function boot() {
     siteUi?.initCursor?.();
-    siteUi?.initNavbar?.();
+    global.EventFlowNavbar?.initNavbar?.();
 
     const user = await guards?.requireCurrentUser?.('profile.html');
     if (!user) {
