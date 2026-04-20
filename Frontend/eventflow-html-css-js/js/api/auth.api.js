@@ -131,6 +131,25 @@
     }
   }
 
+  async function requestPasswordReset(email) {
+    ensureDependencies();
+
+    return client.post('/api/users/password-reset/', {
+      email: String(email || '').trim(),
+    });
+  }
+
+  async function confirmPasswordReset(payload = {}) {
+    ensureDependencies();
+
+    return client.post('/api/users/password-reset/confirm/', {
+      uid: payload.uid || '',
+      token: payload.token || '',
+      password: payload.password || '',
+      password2: payload.password2 || payload.confirmPassword || payload.confirm || '',
+    });
+  }
+
   function logout() {
     ensureDependencies();
     storage.clearTokens();
@@ -138,10 +157,12 @@
 
   global.EventFlowAuthApi = {
     getSession,
+    confirmPasswordReset,
     login,
     logout,
     refreshToken,
     register,
+    requestPasswordReset,
     verifyToken,
   };
 })(window);

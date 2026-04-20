@@ -40,7 +40,7 @@
 
     <div class="nav-actions">
       <a href="pages/auth.html" class="nav-signin" data-auth-link>Sign in</a>
-      <a href="pages/auth.html" class="nav-cta" data-auth-cta>Get started free</a>
+      <a href="pages/auth.html?tab=register" class="nav-cta" data-auth-cta>Get started free</a>
       <button id="hamburger" class="nav-hamburger" aria-label="Toggle menu" aria-expanded="false">
         <span></span><span></span><span></span>
       </button>
@@ -84,7 +84,7 @@
         </p>
 
         <div class="hero-actions">
-          <a href="pages/auth.html" class="btn-primary">Start for free</a>
+          <a href="pages/auth.html?tab=register" class="btn-primary">Start for free</a>
           <a href="#events" class="btn-ghost">Browse events <span class="arrow">→</span></a>
         </div>
       </div>
@@ -243,6 +243,77 @@
           See all events <span class="arrow">→</span>
         </a>
       </div>
+
+      <form class="event-filters reveal" id="event-filter-form" aria-label="Filter events">
+        <div class="event-filter-field event-filter-search">
+          <label for="event-search">Search</label>
+          <input
+            type="search"
+            id="event-search"
+            name="search"
+            placeholder="Search events, venues, topics"
+            autocomplete="off"
+          />
+        </div>
+
+        <div class="event-filter-field">
+          <label for="event-category">Category</label>
+          <select id="event-category" name="category">
+            <option value="">All categories</option>
+          </select>
+        </div>
+
+        <div class="event-filter-field">
+          <label for="event-tag">Tag</label>
+          <select id="event-tag" name="tag">
+            <option value="">All tags</option>
+          </select>
+        </div>
+
+        <div class="event-filter-field">
+          <label for="event-city">City</label>
+          <input
+            type="text"
+            id="event-city"
+            name="city"
+            list="event-city-options"
+            placeholder="Lagos"
+            autocomplete="address-level2"
+          />
+          <datalist id="event-city-options"></datalist>
+        </div>
+
+        <div class="event-filter-field">
+          <label for="event-state">State</label>
+          <input
+            type="text"
+            id="event-state"
+            name="state"
+            list="event-state-options"
+            placeholder="Lagos"
+            autocomplete="address-level1"
+          />
+          <datalist id="event-state-options"></datalist>
+        </div>
+
+        <div class="event-filter-field">
+          <label for="event-start-date">From</label>
+          <input type="date" id="event-start-date" name="start_date" />
+        </div>
+
+        <div class="event-filter-field">
+          <label for="event-end-date">To</label>
+          <input type="date" id="event-end-date" name="end_date" />
+        </div>
+
+        <div class="event-filter-actions">
+          <button type="submit" class="event-filter-submit">Apply</button>
+          <button type="reset" class="event-filter-reset">Reset</button>
+        </div>
+      </form>
+
+      <p class="event-filter-status" id="event-filter-status" role="status" aria-live="polite"></p>
+
       <!-- JS fills this container from the Django API -->
       <div class="showcase-cards" id="events-container">
         <p style="color:rgba(255,255,255,0.4);font-size:0.9rem;grid-column:1/-1;text-align:center">
@@ -327,7 +398,7 @@
             <li>Email confirmations</li>
             <li>Public event page</li>
           </ul>
-          <a href="pages/auth.html" class="price-cta">Get started free</a>
+          <a href="pages/auth.html?tab=register" class="price-cta">Get started free</a>
         </div>
 
         <!-- Pro (featured) -->
@@ -344,7 +415,7 @@
             <li>Team access (5 seats)</li>
             <li>Custom event branding</li>
           </ul>
-          <a href="pages/auth.html" class="price-cta featured-cta">Start free trial</a>
+          <a href="pages/auth.html?tab=register" class="price-cta featured-cta">Start free trial</a>
         </div>
 
         <!-- Enterprise -->
@@ -377,7 +448,7 @@
           <h2 class="cta-h2">Ready to host your<br>next great event?</h2>
           <p class="cta-sub">Join thousands of organizers already using Eventflow.</p>
         </div>
-        <a href="pages/auth.html" class="cta-btn">Create your first event →</a>
+        <a href="pages/auth.html?tab=register" class="cta-btn">Create your first event →</a>
       </div>
     </div>
 

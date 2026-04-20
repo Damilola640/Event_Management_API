@@ -113,15 +113,88 @@
                      required autocomplete="current-password" />
             </div>
 
-            <a href="#" class="auth-inline-link">Forgot your password?</a>
+            <button type="button" class="auth-inline-link" id="forgotPasswordBtn">Forgot your password?</button>
 
             <p id="login-error" class="form-error" role="alert"></p>
 
             <button type="submit" class="btn-primary form-submit">Sign in</button>
 
+            <div class="auth-secondary-action">
+              <span>New to Eventflow?</span>
+              <button type="button" id="desktopRegisterBtn">Create an account</button>
+            </div>
+
             <div class="mobile-switch">
               <p>Don't have an account?</p>
               <button type="button" id="mobileRegisterBtn" class="mobile-switch-btn">Sign up</button>
+            </div>
+          </form>
+
+          <form id="password-reset-request-form" novalidate hidden>
+            <div class="auth-brand-mark">event<span>flow</span></div>
+            <h1>Reset password</h1>
+            <span class="auth-helper">Enter your account email and we will send you a reset link.</span>
+
+            <div class="form-group">
+              <label for="reset-email">Email address</label>
+              <input
+                type="email"
+                id="reset-email"
+                name="email"
+                placeholder="you@example.com"
+                required
+                autocomplete="email"
+              />
+            </div>
+
+            <p id="reset-request-error" class="form-error" role="alert"></p>
+            <p id="reset-request-success" class="form-success" role="status"></p>
+
+            <button type="submit" class="btn-primary form-submit">Send reset link</button>
+
+            <div class="auth-secondary-action">
+              <span>Remembered it?</span>
+              <button type="button" id="backToLoginFromResetBtn">Back to sign in</button>
+            </div>
+          </form>
+
+          <form id="password-reset-confirm-form" novalidate hidden>
+            <div class="auth-brand-mark">event<span>flow</span></div>
+            <h1>Choose new password</h1>
+            <span class="auth-helper">Create a fresh password for your Eventflow account.</span>
+
+            <div class="form-group">
+              <label for="new-password">New password</label>
+              <input
+                type="password"
+                id="new-password"
+                name="password"
+                placeholder="Min. 8 characters"
+                required
+                autocomplete="new-password"
+              />
+            </div>
+
+            <div class="form-group">
+              <label for="new-password-confirm">Confirm password</label>
+              <input
+                type="password"
+                id="new-password-confirm"
+                name="confirm"
+                placeholder="Repeat your password"
+                required
+                autocomplete="new-password"
+              />
+            </div>
+
+            <p id="reset-confirm-error" class="form-error" role="alert"></p>
+            <p id="reset-confirm-success" class="form-success" role="status"></p>
+
+            <button type="submit" class="btn-primary form-submit">Reset password</button>
+
+            <div class="auth-secondary-action">
+              <span>Ready now?</span>
+              <button type="button" id="backToLoginFromConfirmBtn">Back to sign in</button>
             </div>
           </form>
         </div>

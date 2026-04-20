@@ -192,6 +192,85 @@ Changes include:
 
 The social login icons are currently placeholders only and are not connected to OAuth.
 
+## Auth Flow Completion
+
+The sign-in, sign-up, and password reset flow has been extended beyond the visual auth page.
+
+Updated files:
+
+- `pages/auth.html`
+- `css/auth.css`
+- `js/api/auth.api.js`
+- `js/pages/auth.js`
+- `index.html`
+- `event_planner/users/serializers.py`
+- `event_planner/users/views.py`
+- `event_planner/users/urls.py`
+- `event_planner/EventFlow/settings.py`
+
+Changes include:
+
+- added a visible desktop "Create an account" action inside the login form
+- updated homepage "Get started" and trial CTAs to open `auth.html?tab=register`
+- kept direct sign-in links pointed at the login panel
+- added password reset request UI on the auth page
+- added password reset confirmation UI for reset links containing `uid` and `token`
+- added frontend API helpers for password reset request and confirmation
+- added backend password reset request and confirmation endpoints
+- used Django's built-in password reset token generator for secure reset links
+- added `FRONTEND_PASSWORD_RESET_URL` setting with a local frontend default
+- preserved generic reset-request responses so the API does not reveal whether an email exists
+
+Password reset endpoints added:
+
+- `POST /api/users/password-reset/`
+- `POST /api/users/password-reset/confirm/`
+
+## Filters and Search Integration
+
+The integration guide's Step 5 has now been started on the homepage events list.
+
+Updated files:
+
+- `index.html`
+- `css/components.css`
+- `js/pages/home.js`
+- `event_planner/events/urls.py`
+
+Changes include:
+
+- added a filter/search form above the homepage event cards
+- added search, category, tag, city, state, start date, and end date controls
+- wired the form into `event.service.js` through `listEvents(params)`
+- preserved active filters in the browser URL query string
+- hydrated the filter form from URL query params on page load
+- added loading, empty, matching-count, and error messaging for filtered results
+- loaded category and tag options from the backend taxonomy endpoints
+- loaded venue cities/states into datalist suggestions for location filtering
+- rendered the full returned API page of events instead of hard-limiting the homepage to three cards
+
+This follows the guide's recommendation to collect filter form values, build query params, and pass those params through the existing API/service layers.
+
+## Backend Route Fix for Taxonomy Endpoints
+
+The event URL patterns were adjusted so static collection endpoints are declared before the event slug catch-all route.
+
+Why this mattered:
+
+- `/api/events/categories/`
+- `/api/events/tags/`
+- `/api/events/venues/`
+
+were at risk of being interpreted as event slugs because `<slug:slug>/` appeared too early in `events/urls.py`.
+
+The static taxonomy/resource routes now resolve before:
+
+- `/api/events/<slug>/`
+- `/api/events/<slug>/register/`
+- `/api/events/<slug>/invitations/`
+
+Venue, speaker, and sponsor detail routes were also updated from integer path converters to UUID converters to match their model primary keys.
+
 ## Why This Refactor Matters
 
 This work adds important value to the project:
@@ -217,7 +296,12 @@ Completed direction:
 - shared bootstrap
 - profile page
 - improved auth UX
+- completed auth page sign-in/sign-up switching
+- forgot-password request and reset confirmation flow
 - profile navigation from the navbar
+- homepage filters and search
+- taxonomy-driven category/tag select options
+- corrected backend URL ordering for event taxonomy endpoints
 
 ## Important Note
 
@@ -238,6 +322,8 @@ rather than adding more feature logic back into the older monolithic file.
 
 - continue moving any remaining useful logic out of `js/eventflow.js`
 - add browser testing across all updated pages
+- test the new filters against a running Django API with real category/tag/venue data
+- test password reset with the configured email backend and frontend reset URL
+- add pagination controls or a "load more" flow for filtered event results
 - connect real OAuth if social sign-in is required
-- add filter/search UI using `events.api.js` and `event.service.js`
 - continue building organizer-only and dashboard features on the modular structure
