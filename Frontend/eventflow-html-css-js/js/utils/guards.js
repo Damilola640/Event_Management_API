@@ -3,10 +3,12 @@
    ============================================================ */
 
 (function (global) {
-  const authService = global.EventFlowAuthService;
+  function getAuthService() {
+    return global.EventFlowAuthService;
+  }
 
   function ensureDependencies() {
-    if (!authService) {
+    if (!getAuthService()) {
       throw new Error('EventFlowAuthService is required before guards.js.');
     }
   }
@@ -48,6 +50,7 @@
 
   function requireAuth(redirectTo) {
     ensureDependencies();
+    const authService = getAuthService();
 
     if (authService.isLoggedIn()) {
       return true;
@@ -58,6 +61,7 @@
 
   async function requireOrganizer(options = {}) {
     ensureDependencies();
+    const authService = getAuthService();
 
     const redirectTo = options.redirectTo;
     const deniedPath = options.deniedRedirect || 'auth.html';
@@ -82,6 +86,7 @@
 
   async function requireCurrentUser(redirectTo) {
     ensureDependencies();
+    const authService = getAuthService();
 
     if (!authService.isLoggedIn()) {
       redirectToAuth(redirectTo, 'login');

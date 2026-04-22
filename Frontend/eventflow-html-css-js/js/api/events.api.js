@@ -43,6 +43,11 @@
     return client.get(`/api/events/${encodeURIComponent(slug)}/`);
   }
 
+  async function createEvent(payload = {}) {
+    ensureDependencies();
+    return client.post('/api/events/', payload, { auth: true });
+  }
+
   async function registerForEvent(slug) {
     ensureDependencies();
     return client.post(`/api/events/${encodeURIComponent(slug)}/register/`, undefined, {
@@ -66,6 +71,7 @@
   }
 
   global.EventFlowEventsApi = {
+    createEvent,
     getEvents,
     getEventBySlug,
     registerForEvent,

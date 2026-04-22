@@ -32,6 +32,14 @@
     setText('#profile-error', type === 'error' ? message : '');
   }
 
+  function updateOrganizerActions(user) {
+    const createEventLink = document.getElementById('profile-create-event-link');
+
+    if (createEventLink) {
+      createEventLink.hidden = !Boolean(user?.isOrganizer);
+    }
+  }
+
   function renderProfile(user) {
     if (!user) return;
 
@@ -44,6 +52,7 @@
     setText('[data-profile-email]', user.email);
     setText('[data-profile-username]', user.username);
     setText('[data-profile-role]', user.role);
+    updateOrganizerActions(user);
 
     setValue('[name="first_name"]', user.firstName);
     setValue('[name="firstName"]', user.firstName);

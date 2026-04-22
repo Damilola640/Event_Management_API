@@ -1,0 +1,151 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Create Event — Eventflow</title>
+
+  <link rel="stylesheet" href="../css/variables.css" />
+  <link rel="stylesheet" href="../css/navbar.css" />
+  <link rel="stylesheet" href="../css/auth.css" />
+</head>
+<body>
+
+  <div id="cursor" aria-hidden="true"></div>
+
+  <nav class="navbar" role="navigation">
+    <a href="../index.html" class="nav-logo">event<span>flow</span></a>
+    <div class="nav-actions">
+      <a href="profile.html" class="nav-signin">← Back to profile</a>
+    </div>
+  </nav>
+
+  <main class="auth-main">
+    <div class="auth-card event-builder-card">
+      <p class="auth-tagline event-builder-tagline">Organizer tools</p>
+      <div class="auth-logo event-builder-title">Create a new event</div>
+      <p class="auth-tagline event-builder-subtitle">
+        Publish a new Eventflow listing using the live backend fields already defined in the API.
+      </p>
+
+      <form id="create-event-form" novalidate>
+        <div class="event-builder-grid">
+          <div class="form-group event-builder-span-2">
+            <label for="event-name-input">Event name</label>
+            <input
+              type="text"
+              id="event-name-input"
+              name="name"
+              placeholder="Lagos Product Leadership Summit"
+              autocomplete="off"
+            />
+          </div>
+
+          <div class="form-group event-builder-span-2">
+            <label for="event-description-input">Description</label>
+            <textarea
+              id="event-description-input"
+              name="description"
+              rows="5"
+              placeholder="Tell attendees what makes this event worth showing up for."
+            ></textarea>
+          </div>
+
+          <div class="form-group">
+            <label for="event-start-date-input">Start date</label>
+            <input type="date" id="event-start-date-input" name="start_date" />
+          </div>
+
+          <div class="form-group">
+            <label for="event-end-date-input">End date</label>
+            <input type="date" id="event-end-date-input" name="end_date" />
+          </div>
+
+          <div class="form-group">
+            <label for="event-start-time-input">Start time</label>
+            <input type="time" id="event-start-time-input" name="start_time" />
+          </div>
+
+          <div class="form-group">
+            <label for="event-end-time-input">End time</label>
+            <input type="time" id="event-end-time-input" name="end_time" />
+          </div>
+
+          <div class="form-group">
+            <label for="event-venue-input">Venue</label>
+            <select id="event-venue-input" name="venue">
+              <option value="">Loading venues...</option>
+            </select>
+            <span class="form-hint">Venues are loaded from the existing backend venue endpoint.</span>
+          </div>
+
+          <div class="form-group">
+            <label for="event-location-details-input">Location details</label>
+            <input
+              type="text"
+              id="event-location-details-input"
+              name="location_details"
+              placeholder="Main hall, 2nd floor, Victoria Island"
+            />
+          </div>
+
+          <div class="form-group">
+            <label for="event-capacity-input">Capacity</label>
+            <input
+              type="number"
+              id="event-capacity-input"
+              name="max_attendees"
+              min="0"
+              step="1"
+              placeholder="300"
+            />
+          </div>
+
+          <div class="form-group">
+            <label for="event-price-input">Ticket price</label>
+            <input
+              type="number"
+              id="event-price-input"
+              name="ticket_price"
+              min="0"
+              step="0.01"
+              placeholder="0.00"
+            />
+          </div>
+
+          <div class="form-group">
+            <label for="event-categories-input">Categories</label>
+            <select id="event-categories-input" name="categories" multiple size="5"></select>
+            <span class="form-hint">Hold Ctrl or Cmd to select more than one category.</span>
+          </div>
+
+          <div class="form-group">
+            <label for="event-tags-input">Tags</label>
+            <select id="event-tags-input" name="tags" multiple size="5"></select>
+            <span class="form-hint">Use tags to help attendees discover the event.</span>
+          </div>
+        </div>
+
+        <label class="event-builder-toggle">
+          <input type="checkbox" name="is_private" />
+          <span>Make this a private event</span>
+        </label>
+
+        <p id="create-event-error" class="form-error" role="alert"></p>
+        <p id="create-event-success" class="form-success" role="status"></p>
+        <a id="created-event-link" class="event-builder-link" href="../index.html#events" hidden>
+          View the created event
+        </a>
+
+        <button type="submit" class="btn-primary form-submit">Create event</button>
+
+        <p class="form-footer">
+          This is the first organizer creation flow scaffold. It uses the modular API, service, guard, and page-controller structure from the integration guide.
+        </p>
+      </form>
+    </div>
+  </main>
+
+  <script src="../js/main.js"></script>
+</body>
+</html>

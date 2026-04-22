@@ -22,6 +22,10 @@
     return Number.isFinite(nextValue) ? nextValue : fallback;
   }
 
+  function toTrimmedString(value) {
+    return String(value ?? '').trim();
+  }
+
   function normalizeVenue(venue, locationDetails) {
     if (venue && typeof venue === 'object') {
       return {
@@ -155,6 +159,26 @@
     return rawItems.map((item) => normalizeTaxonomyItem(item, fallbackType));
   }
 
+  function normalizeCreateEventPayload(payload = {}) {
+    return {
+      name: toTrimmedString(payload.name),
+      description: toTrimmedString(payload.description),
+      start_date: toTrimmedString(payload.start_date ?? payload.startDate),
+      end_date: toTrimmedString(payload.end_date ?? payload.endDate),
+      start_time: toTrimmedString(payload.start_time ?? payload.startTime),
+      end_time: toTrimmedString(payload.end_time ?? payload.endTime),
+      venue: payload.venue ? toTrimmedString(payload.venue) : null,
+      location_details: toTrimmedString(
+        payload.location_details ?? payload.locationDetails
+      ),
+      max_attendees: toNumber(payload.max_attendees ?? payload.maxAttendees, 0),
+      ticket_price: toNumber(payload.ticket_price ?? payload.ticketPrice, 0),
+      is_private: Boolean(payload.is_private ?? payload.isPrivate),
+      categories: toArray(payload.categories).map((item) => toTrimmedString(item)).filter(Boolean),
+      tags: toArray(payload.tags).map((item) => toTrimmedString(item)).filter(Boolean),
+    };
+  }
+
   async function listEvents(params = {}) {
     ensureDependencies();
     const response = await eventsApi.getEvents(params);
@@ -164,6 +188,12 @@
   async function getEventBySlug(slug) {
     ensureDependencies();
     const response = await eventsApi.getEventBySlug(slug);
+    return mapEventFromApi(response);
+  }
+
+  async function createEvent(payload = {}) {
+    ensureDependencies();
+    const response = await eventsApi.createEvent(normalizeCreateEventPayload(payload));
     return mapEventFromApi(response);
   }
 
@@ -195,12 +225,14 @@
   }
 
   global.EventFlowEventService = {
+    createEvent,
     getCategories,
     getEventBySlug,
     getTags,
     getVenues,
     listEvents,
     mapCollection,
+    normalizeCreateEventPayload,
     mapEventFromApi,
     mapPaginatedEventsResponse,
     normalizeTaxonomyItem,

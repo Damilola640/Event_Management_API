@@ -21,6 +21,7 @@
     'pages/home.js',
     'pages/auth.js',
     'pages/booking.js',
+    'pages/create-event.js',
     'pages/profile.js',
   ];
 
@@ -46,6 +47,7 @@
       return 'auth';
     }
     if (document.getElementById('booking-form')) return 'booking';
+    if (document.getElementById('create-event-form')) return 'create-event';
     if (document.getElementById('profile-form')) return 'profile';
     return 'unknown';
   }
@@ -55,6 +57,7 @@
       home: global.EventFlowHomePage?.boot,
       auth: global.EventFlowAuthPage?.boot,
       booking: global.EventFlowBookingPage?.boot,
+      'create-event': global.EventFlowCreateEventPage?.boot,
       profile: global.EventFlowProfilePage?.boot,
     };
 
