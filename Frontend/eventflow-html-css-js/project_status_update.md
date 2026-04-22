@@ -122,6 +122,7 @@ We now have page-specific controllers for major frontend views:
 - `js/pages/home.js`
 - `js/pages/auth.js`
 - `js/pages/booking.js`
+- `js/pages/create-event.js`
 - `js/pages/profile.js`
 
 Responsibilities:
@@ -129,6 +130,7 @@ Responsibilities:
 - `home.js` loads and renders homepage events
 - `auth.js` controls login/register behavior
 - `booking.js` loads event details and handles event registration
+- `create-event.js` protects organizer access and submits new events through the modular API/service flow
 - `profile.js` protects the profile page, loads current user data, and handles profile updates
 
 ## Shared Bootstrap Added
@@ -142,6 +144,7 @@ It detects the current page and runs the appropriate controller:
 - home
 - auth
 - booking
+- create-event
 - profile
 
 We also removed duplicated page-level `DOMContentLoaded` bindings so initialization now flows through one central entry point.
@@ -153,10 +156,12 @@ We also removed duplicated page-level `DOMContentLoaded` bindings so initializat
 - `index.html`
 - `pages/auth.html`
 - `pages/booking.html`
+- `pages/profile.html`
 
 ### Added
 
 - `pages/profile.html`
+- `pages/create-event.html`
 
 These pages now load the modular JS stack instead of depending on the older monolithic `js/eventflow.js` flow for current feature work.
 
@@ -251,6 +256,58 @@ Changes include:
 
 This follows the guide's recommendation to collect filter form values, build query params, and pass those params through the existing API/service layers.
 
+## Homepage Pagination / Load More
+
+The homepage event listing now supports paginated loading through a "load more" flow.
+
+Updated files:
+
+- `index.html`
+- `css/components.css`
+- `js/pages/home.js`
+
+Changes include:
+
+- added a dedicated "Load more events" control below the homepage event grid
+- kept pagination state in the homepage controller instead of scattering it across the page
+- parsed the backend pagination `next` URL to request the correct next page
+- appended additional events to the existing grid instead of replacing the visible results
+- updated the results status text to reflect visible results versus total available results
+- reset pagination cleanly whenever filters are applied or cleared
+- automatically hid the load-more control once no more pages were available
+
+This extends the guide's homepage events step with a frontend-friendly pagination experience while still relying on the existing paginated API response.
+
+## Organizer Event Creation Scaffold
+
+The next guide direction around organizer-only actions and event creation has now been started on the frontend.
+
+Updated files:
+
+- `pages/create-event.html`
+- `css/auth.css`
+- `js/pages/create-event.js`
+- `js/api/events.api.js`
+- `js/services/event.service.js`
+- `js/main.js`
+- `js/pages/profile.js`
+- `pages/profile.html`
+- `js/utils/guards.js`
+
+Changes include:
+
+- added a dedicated organizer-only event creation page on the modular frontend stack
+- added a `createEvent()` API helper for `POST /api/events/`
+- added a service-layer payload normalizer so event creation uses real backend serializer field names
+- added taxonomy loading for venues, categories, and tags from existing backend endpoints
+- added organizer route protection using `requireOrganizer()`
+- exposed a `Create event` entry point from the profile page for organizer accounts
+- wired the new page into `main.js` page detection and bootstrapping
+- extended shared form styling to support the larger event builder form
+- fixed guard dependency resolution so protected pages use `EventFlowAuthService` reliably at runtime
+
+This gives the project its first organizer-only creation flow while staying within the integration guide's modular architecture.
+
 ## Backend Route Fix for Taxonomy Endpoints
 
 The event URL patterns were adjusted so static collection endpoints are declared before the event slug catch-all route.
@@ -295,11 +352,13 @@ Completed direction:
 - modular page controllers
 - shared bootstrap
 - profile page
+- organizer event creation scaffold
 - improved auth UX
 - completed auth page sign-in/sign-up switching
 - forgot-password request and reset confirmation flow
 - profile navigation from the navbar
 - homepage filters and search
+- homepage pagination / load more
 - taxonomy-driven category/tag select options
 - corrected backend URL ordering for event taxonomy endpoints
 
@@ -323,7 +382,9 @@ rather than adding more feature logic back into the older monolithic file.
 - continue moving any remaining useful logic out of `js/eventflow.js`
 - add browser testing across all updated pages
 - test the new filters against a running Django API with real category/tag/venue data
+- test organizer-only event creation with real organizer and attendee accounts
+- improve post-create routing so successful event creation leads to a dedicated organizer event detail/dashboard page
+- add organizer event editing and management flows on top of the new creation scaffold
 - test password reset with the configured email backend and frontend reset URL
-- add pagination controls or a "load more" flow for filtered event results
 - connect real OAuth if social sign-in is required
 - continue building organizer-only and dashboard features on the modular structure
