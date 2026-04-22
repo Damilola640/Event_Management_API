@@ -6,6 +6,13 @@
   const eventService = global.EventFlowEventService;
   const eventCard = global.EventFlowEventCard;
   const siteUi = global.EventFlowSiteUi;
+  const paginationState = {
+    filters: {},
+    nextPage: null,
+    count: 0,
+    visibleCount: 0,
+    isLoadingMore: false,
+  };
 
   const FILTER_FIELDS = [
     "search",
@@ -34,6 +41,14 @@
     if (status) {
       status.textContent = message || "";
     }
+  }
+
+  function getLoadMoreButton() {
+    return document.getElementById("event-load-more");
+  }
+
+  function getPaginationContainer() {
+    return document.getElementById("event-pagination");
   }
 
   function getFilterForm() {
@@ -111,9 +126,7 @@
 
   function formatResultsStatus(response, filters) {
     const count = Number(response?.count ?? 0);
-    const visibleCount = Array.isArray(response?.results)
-      ? response.results.length
-      : 0;
+    const visibleCount = Number(response?.visibleCount ?? 0);
     const prefix = hasActiveFilters(filters) ? "matching " : "";
 
     if (!visibleCount) {
@@ -127,6 +140,44 @@
     }
 
     return `Showing ${visibleCount} ${prefix}${visibleCount === 1 ? "event" : "events"}.`;
+  }
+
+  function getNextPageNumber(nextUrl) {
+    if (!nextUrl) return null;
+
+    try {
+      const parsedUrl = new URL(nextUrl, global.location.origin);
+      const page = Number(parsedUrl.searchParams.get("page"));
+      return Number.isFinite(page) && page > 0 ? page : null;
+    } catch (error) {
+      return null;
+    }
+  }
+
+  function updatePaginationState(response, filters, options = {}) {
+    const results = Array.isArray(response?.results) ? response.results : [];
+
+    paginationState.filters = { ...filters };
+    paginationState.nextPage = getNextPageNumber(response?.next);
+    paginationState.count = Number(response?.count ?? results.length);
+    paginationState.visibleCount = options.append
+      ? paginationState.visibleCount + results.length
+      : results.length;
+  }
+
+  function updateLoadMoreControls() {
+    const pagination = getPaginationContainer();
+    const button = getLoadMoreButton();
+
+    if (!pagination || !button) return;
+
+    const hasMore = Boolean(paginationState.nextPage);
+    pagination.hidden = !hasMore;
+    button.hidden = !hasMore;
+    button.disabled = paginationState.isLoadingMore;
+    button.textContent = paginationState.isLoadingMore
+      ? "Loading more events..."
+      : "Load more events";
   }
 
   function getOptionValue(item) {
@@ -222,38 +273,91 @@
     siteUi?.initReveal?.(container);
   }
 
-  async function loadEvents(filters = {}) {
+  function appendEvents(container, events) {
+    if (!events.length) return;
+
+    container.insertAdjacentHTML(
+      "beforeend",
+      events.map((event) => eventCard.renderEventCard(event)).join(""),
+    );
+
+    siteUi?.initReveal?.(container);
+  }
+
+  async function loadEvents(filters = {}, options = {}) {
     const container = document.getElementById("events-container");
     if (!container) return;
 
-    setContainerMessage(container, "Loading events...");
-    setFilterStatus("Loading events...");
+    const append = Boolean(options.append);
+    const page = options.page ?? 1;
+
+    if (!append) {
+      paginationState.visibleCount = 0;
+      paginationState.nextPage = null;
+      paginationState.count = 0;
+      paginationState.isLoadingMore = false;
+      setContainerMessage(container, "Loading events...");
+      setFilterStatus("Loading events...");
+      updateLoadMoreControls();
+    } else {
+      paginationState.isLoadingMore = true;
+      updateLoadMoreControls();
+    }
 
     try {
+      const requestParams = page > 1 ? { ...filters, page } : filters;
       const response = eventService?.listEvents
-        ? await eventService.listEvents(filters)
+        ? await eventService.listEvents(requestParams)
         : { results: [] };
       const events = Array.isArray(response?.results) ? response.results : [];
+      updatePaginationState(response, filters, { append });
 
-      if (!events.length) {
+      if (!events.length && !append) {
         const emptyMessage = hasActiveFilters(filters)
           ? "No events match those filters yet."
           : "No events yet - check back soon!";
 
         setContainerMessage(container, emptyMessage);
-        setFilterStatus(formatResultsStatus(response, filters));
+        setFilterStatus(
+          formatResultsStatus(
+            { ...response, visibleCount: paginationState.visibleCount },
+            filters,
+          ),
+        );
+        updateLoadMoreControls();
         return;
       }
 
-      renderEvents(container, events);
-      setFilterStatus(formatResultsStatus(response, filters));
+      if (append) {
+        appendEvents(container, events);
+      } else {
+        renderEvents(container, events);
+      }
+
+      setFilterStatus(
+        formatResultsStatus(
+          { ...response, visibleCount: paginationState.visibleCount },
+          filters,
+        ),
+      );
+      updateLoadMoreControls();
     } catch (error) {
       console.error("Could not load events:", error.message);
-      setContainerMessage(
-        container,
-        "Could not load events. Make sure Django is running and the API is reachable.",
-      );
-      setFilterStatus("Event loading failed.");
+      if (!append) {
+        setContainerMessage(
+          container,
+          "Could not load events. Make sure Django is running and the API is reachable.",
+        );
+        setFilterStatus("Event loading failed.");
+      } else {
+        setFilterStatus("Could not load more events right now.");
+      }
+      updateLoadMoreControls();
+    } finally {
+      if (append) {
+        paginationState.isLoadingMore = false;
+        updateLoadMoreControls();
+      }
     }
   }
 
@@ -279,12 +383,30 @@
     });
   }
 
+  function bindLoadMore() {
+    const button = getLoadMoreButton();
+    if (!button || button.dataset.bound === "true") return;
+
+    button.dataset.bound = "true";
+    button.addEventListener("click", () => {
+      if (!paginationState.nextPage || paginationState.isLoadingMore) {
+        return;
+      }
+
+      loadEvents(paginationState.filters, {
+        append: true,
+        page: paginationState.nextPage,
+      });
+    });
+  }
+
   function boot() {
     siteUi?.boot?.();
 
     const filters = getFiltersFromUrl();
     hydrateFilterForm(filters);
     bindFilters();
+    bindLoadMore();
     loadFilterOptions().catch((error) => {
       console.warn("Could not load event filter options:", error.message);
     });
@@ -293,6 +415,7 @@
 
   global.EventFlowHomePage = {
     bindFilters,
+    bindLoadMore,
     boot,
     collectFilterValues,
     getFiltersFromUrl,
