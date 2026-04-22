@@ -24,8 +24,6 @@
     'pages/profile.js',
   ];
 
-  let loadedCount = 0;
-
   function getJsBase() {
     return window.location.pathname.includes('/pages/') ? '../js/' : 'js/';
   }
@@ -42,9 +40,7 @@
 
   function detectPage() {
     if (document.getElementById('events-container')) return 'home';
-    if (document.getElementById('login-form') || document.getElementById('register-form')) {
-      return 'auth';
-    }
+    if (document.getElementById('login-form') || document.getElementById('register-form')) return 'auth';
     if (document.getElementById('booking-form')) return 'booking';
     if (document.getElementById('profile-form')) return 'profile';
     return 'unknown';
@@ -78,7 +74,6 @@
     boot();
   }
 
-  // Start loading all scripts and boot when done
   loadAllScripts().catch(error => {
     console.error('Failed to load scripts:', error);
   });
