@@ -39,6 +39,34 @@
     });
   }
 
+  // Formats a bare "HH:MM:SS" / "HH:MM" clock string (as returned by the API)
+  // into a readable 12-hour time, e.g. "14:30:00" -> "2:30 PM".
+  function formatClock(value) {
+    if (!value) return '';
+    const match = String(value).match(/^(\d{1,2}):(\d{2})/);
+    if (!match) return String(value);
+
+    let hours = Number(match[1]);
+    const minutes = match[2];
+    const period = hours >= 12 ? 'PM' : 'AM';
+    hours = hours % 12 || 12;
+    return `${hours}:${minutes} ${period}`;
+  }
+
+  // Formats a start/end date pair, collapsing single-day ranges.
+  function formatDateRange(start, end) {
+    if (!start) return 'Date TBC';
+    if (!end || start === end) return formatDate(start);
+    return `${formatDate(start)} – ${formatDate(end)}`;
+  }
+
+  function titleCase(value) {
+    return String(value ?? '')
+      .replace(/[_-]+/g, ' ')
+      .replace(/\b\w/g, (char) => char.toUpperCase())
+      .trim();
+  }
+
   function formatCurrency(value, currency = 'NGN', locale = 'en-NG') {
     const amount = toNumber(value, 0);
 
