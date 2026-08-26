@@ -132,11 +132,12 @@
   function showCreatedEvent(createdEvent) {
     const link = document.getElementById('created-event-link');
     const href = createdEvent?.slug
-      ? `booking.html?slug=${encodeURIComponent(createdEvent.slug)}`
-      : '../index.html#events';
+      ? `event-detail.html?slug=${encodeURIComponent(createdEvent.slug)}`
+      : 'my-events.html';
 
     if (link) {
       link.href = href;
+      link.textContent = 'View the created event';
       link.hidden = false;
     }
   }
@@ -187,14 +188,24 @@
   }
 
   async function boot() {
-    siteUi?.initCursor?.();
-    global.EventFlowNavbar?.initNavbar?.();
+    const shell = global.EventFlowDashboardShell;
 
-    const hasAccess = await guards?.requireOrganizer?.({
-      redirectTo: 'create-event.html',
-      deniedRedirect: 'profile.html',
-      deniedMessage: 'Only organizers can create events.',
-    });
+    let hasAccess = false;
+    if (shell?.mount && document.getElementById('app-sidebar')) {
+      const user = await shell.mount({
+        require: 'organizer',
+        deniedMessage: 'Only organizers can create events.',
+      });
+      hasAccess = Boolean(user);
+    } else {
+      siteUi?.initCursor?.();
+      global.EventFlowNavbar?.initNavbar?.();
+      hasAccess = await guards?.requireOrganizer?.({
+        redirectTo: 'create-event.html',
+        deniedRedirect: 'profile.html',
+        deniedMessage: 'Only organizers can create events.',
+      });
+    }
 
     if (!hasAccess) {
       return;
