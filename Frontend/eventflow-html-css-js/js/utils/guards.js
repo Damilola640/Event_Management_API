@@ -96,10 +96,39 @@
     return authService.getCurrentUser();
   }
 
+  async function requireAdmin(options = {}) {
+    ensureDependencies();
+    const authService = getAuthService();
+
+    const redirectTo = options.redirectTo;
+    const deniedPath = options.deniedRedirect || 'dashboard.html';
+    const deniedMessage = options.deniedMessage || 'Administrator access is required.';
+
+    if (!authService.isLoggedIn()) {
+      redirectToAuth(redirectTo, 'login');
+      return null;
+    }
+
+    const user = await authService.getCurrentUser();
+    const isAdmin = Boolean(user?.raw?.is_staff || user?.raw?.is_superuser);
+
+    if (isAdmin) {
+      return user;
+    }
+
+    if (options.alert !== false) {
+      global.alert(deniedMessage);
+    }
+
+    redirectToPage(deniedPath);
+    return null;
+  }
+
   global.EventFlowGuards = {
     buildAuthUrl,
     normalizeRedirectPath,
     redirectToAuth,
+    requireAdmin,
     requireAuth,
     requireCurrentUser,
     requireOrganizer,

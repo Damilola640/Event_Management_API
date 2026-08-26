@@ -14,6 +14,20 @@
       .replace(/'/g, '&#39;');
   }
 
+  // Cards render from the root (index.html) and from within /pages/.
+  // Compute the correct relative prefix so links resolve in both contexts.
+  function pagePrefix() {
+    return global.location.pathname.includes('/pages/') ? '' : 'pages/';
+  }
+
+  function detailHref(event) {
+    return `${pagePrefix()}event-detail.html?slug=${encodeURIComponent(event.slug || '')}`;
+  }
+
+  function editHref(event) {
+    return `${pagePrefix()}edit-event.html?slug=${encodeURIComponent(event.slug || '')}`;
+  }
+
   function getCategoryColor(categoryName) {
     const colorMap = {
       Conference: 'orange',
@@ -56,7 +70,7 @@
       ? Math.max(0, Math.min(100, Number(event.progress)))
       : 0;
     const color = getCategoryColor(categoryName);
-    const bookingUrl = event.bookingUrl || `pages/booking.html?slug=${encodeURIComponent(event.slug || '')}`;
+    const bookingUrl = detailHref(event);
 
     return `
       <div class="ev-card reveal" role="article" tabindex="0">
@@ -86,15 +100,63 @@
           <button
             class="ev-btn ev-btn-${escapeHtml(color)}"
             onclick="window.location.href='${escapeHtml(bookingUrl)}'">
-            Book now
+            View event
           </button>
         </div>
       </div>
     `;
   }
 
+  /**
+   * Management variant used on the organizer's My Events grid.
+   * Renders View / Edit actions and a status badge. Delete is wired by the
+   * page controller via the data-delete-slug hook.
+   */
+  function renderManageEventCard(event) {
+    const categoryName = formatters?.formatCategoryName
+      ? formatters.formatCategoryName(event)
+      : event.category?.name || 'Event';
+    const venueName = formatters?.formatVenueName
+      ? formatters.formatVenueName(event)
+      : event.venueName || 'Venue TBC';
+    const dateText = formatters?.formatDate
+      ? formatters.formatDate(event.startDate || event.start_date)
+      : 'Date TBC';
+    const priceText = formatters?.formatCurrency
+      ? formatters.formatCurrency(event.ticketPrice ?? event.ticket_price)
+      : 'Free';
+    const attendanceText = formatters?.formatAttendanceSummary
+      ? formatters.formatAttendanceSummary(event.registeredCount, event.capacity)
+      : `${event.registeredCount ?? 0} registered`;
+    const status = escapeHtml(event.status || 'upcoming');
+    const slug = escapeHtml(event.slug || '');
+
+    return `
+      <article class="manage-card" data-event-slug="${slug}">
+        <div class="manage-card-head">
+          <span class="badge badge-status badge-${status}">${status}</span>
+          ${event.isPrivate ? '<span class="badge badge-private">Private</span>' : ''}
+        </div>
+        <h3 class="manage-card-title">${escapeHtml(event.title || event.name || 'Untitled event')}</h3>
+        <p class="manage-card-meta">${escapeHtml(dateText)} · ${escapeHtml(venueName)}</p>
+        <p class="manage-card-meta">${escapeHtml(attendanceText)} · ${escapeHtml(priceText)}</p>
+        <div class="manage-card-actions">
+          <a class="btn-ghost btn-sm" href="${escapeHtml(detailHref(event))}">View</a>
+          <a class="btn-ghost btn-sm" href="${escapeHtml(editHref(event))}">Edit &amp; manage</a>
+          <button type="button" class="btn-danger btn-sm" data-delete-slug="${slug}"
+                  data-delete-name="${escapeHtml(event.title || event.name || '')}">
+            Delete
+          </button>
+        </div>
+      </article>
+    `;
+  }
+
   global.EventFlowEventCard = {
     getCategoryColor,
     renderEventCard,
+    renderManageEventCard,
+    detailHref,
+    editHref,
   };
 })(window);
