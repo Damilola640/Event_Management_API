@@ -1,0 +1,33 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Event details — Eventflow</title>
+
+  <link rel="stylesheet" href="../css/variables.css" />
+  <link rel="stylesheet" href="../css/navbar.css" />
+  <link rel="stylesheet" href="../css/dashboard.css" />
+</head>
+<body data-page="event-detail" data-title="Event details">
+
+  <div id="cursor" aria-hidden="true"></div>
+
+  <nav class="navbar" role="navigation">
+    <a href="../index.html" class="nav-logo">event<span>flow</span></a>
+    <div class="nav-actions">
+      <a href="../index.html#events" class="nav-signin">← Back to events</a>
+      <a href="dashboard.html" class="nav-signin" data-auth-link hidden>Dashboard</a>
+    </div>
+  </nav>
+
+  <main class="detail-main">
+    <a class="detail-back" href="../index.html#events">← Back to all events</a>
+    <div id="detail-root">
+      <p class="app-message">Loading event…</p>
+    </div>
+  </main>
+
+  <script src="../js/main.js"></script>
+</body>
+</html>

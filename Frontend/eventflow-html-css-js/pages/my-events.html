@@ -1,0 +1,36 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>My Events — Eventflow</title>
+
+  <link rel="stylesheet" href="../css/variables.css" />
+  <link rel="stylesheet" href="../css/components.css" />
+  <link rel="stylesheet" href="../css/dashboard.css" />
+</head>
+<body data-page="my-events" data-title="My events">
+  <div class="app-layout">
+    <aside id="app-sidebar" class="app-sidebar"></aside>
+    <div class="app-body">
+      <header id="app-topbar" class="app-topbar"></header>
+      <main class="app-main">
+
+        <div class="rm-header">
+          <div>
+            <h2 class="rm-title">Events you organize</h2>
+            <p class="rm-sub">Create, edit, manage invitations for, and delete your events.</p>
+          </div>
+          <a class="btn-primary btn-sm" href="create-event.html">Create event</a>
+        </div>
+
+        <div id="my-events-status" class="app-message" style="padding:0.5rem 0"></div>
+        <div id="my-events-grid" class="manage-grid"></div>
+
+      </main>
+    </div>
+  </div>
+
+  <script src="../js/main.js"></script>
+</body>
+</html>

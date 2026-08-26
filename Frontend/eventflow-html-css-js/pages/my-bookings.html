@@ -1,0 +1,36 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>My Bookings — Eventflow</title>
+
+  <link rel="stylesheet" href="../css/variables.css" />
+  <link rel="stylesheet" href="../css/dashboard.css" />
+</head>
+<body data-page="my-bookings" data-title="My bookings">
+  <div class="app-layout">
+    <aside id="app-sidebar" class="app-sidebar"></aside>
+    <div class="app-body">
+      <header id="app-topbar" class="app-topbar"></header>
+      <main class="app-main">
+
+        <div class="rm-header">
+          <div>
+            <h2 class="rm-title">Events you're registered for</h2>
+            <p class="rm-sub">Every event you've booked a spot at, most recent first.</p>
+          </div>
+          <a class="btn-ghost btn-sm" href="../index.html#events">Browse more events</a>
+        </div>
+
+        <div id="my-bookings-body">
+          <p class="app-message">Loading your bookings…</p>
+        </div>
+
+      </main>
+    </div>
+  </div>
+
+  <script src="../js/main.js"></script>
+</body>
+</html>

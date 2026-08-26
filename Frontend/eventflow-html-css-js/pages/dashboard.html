@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Dashboard — Eventflow</title>
+
+  <link rel="stylesheet" href="../css/variables.css" />
+  <link rel="stylesheet" href="../css/dashboard.css" />
+</head>
+<body data-page="dashboard" data-title="Dashboard">
+  <div class="app-layout">
+    <aside id="app-sidebar" class="app-sidebar"></aside>
+    <div class="app-body">
+      <header id="app-topbar" class="app-topbar"></header>
+      <main class="app-main">
+
+        <div id="dashboard-greeting" class="app-card" style="margin-bottom:1.5rem">
+          <p class="app-message" style="padding:0">Loading your dashboard…</p>
+        </div>
+
+        <div id="dashboard-stats" class="stat-grid"></div>
+
+        <div class="app-grid-2">
+          <section class="app-card">
+            <h2 class="app-section-title" style="margin-top:0">Quick actions</h2>
+            <div id="dashboard-actions" class="quick-actions"></div>
+          </section>
+
+          <section class="app-card">
+            <h2 class="app-section-title" style="margin-top:0">Recent notifications</h2>
+            <div id="dashboard-notifications">
+              <p class="app-message" style="padding:0.5rem 0">Loading…</p>
+            </div>
+          </section>
+        </div>
+
+      </main>
+    </div>
+  </div>
+
+  <script src="../js/main.js"></script>
+</body>
+</html>

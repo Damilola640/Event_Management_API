@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Event invitation — Eventflow</title>
+
+  <link rel="stylesheet" href="../css/variables.css" />
+  <link rel="stylesheet" href="../css/navbar.css" />
+  <link rel="stylesheet" href="../css/auth.css" />
+  <link rel="stylesheet" href="../css/dashboard.css" />
+</head>
+<body data-page="invitation" data-title="Invitation">
+
+  <div id="cursor" aria-hidden="true"></div>
+
+  <nav class="navbar" role="navigation">
+    <a href="../index.html" class="nav-logo">event<span>flow</span></a>
+    <div class="nav-actions">
+      <a href="../index.html" class="nav-signin">← Back to home</a>
+    </div>
+  </nav>
+
+  <main class="auth-main">
+    <div class="auth-card" style="max-width:480px;text-align:center">
+      <div class="invite-icon" aria-hidden="true">✉</div>
+
+      <div id="invitation-root">
+        <p class="auth-tagline" style="font-size:0.75rem;letter-spacing:0.08em;text-transform:uppercase;color:var(--accent);font-weight:500;margin-bottom:0.5rem">
+          Private event invitation
+        </p>
+        <div class="auth-logo" style="font-size:1.5rem;margin-bottom:0.75rem">You've been invited</div>
+        <p class="auth-tagline" style="margin-bottom:1.5rem">
+          Accept your invitation to unlock access to this private event on EventFlow.
+        </p>
+
+        <button id="invitation-accept-btn" class="btn-primary form-submit">Accept invitation</button>
+
+        <p id="invitation-error" class="form-error" role="alert"></p>
+        <p id="invitation-success" class="form-success" role="status"></p>
+      </div>
+    </div>
+  </main>
+
+  <script src="../js/main.js"></script>
+</body>
+</html>
