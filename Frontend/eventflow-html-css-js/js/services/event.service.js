@@ -26,6 +26,13 @@
     return String(value ?? '').trim();
   }
 
+  function toNullableNumber(value) {
+    const raw = value ?? '';
+    if (String(raw).trim() === '') return null;
+    const nextValue = Number(raw);
+    return Number.isFinite(nextValue) ? nextValue : null;
+  }
+
   function normalizeVenue(venue, locationDetails) {
     if (venue && typeof venue === 'object') {
       return {
@@ -198,8 +205,8 @@
       location_details: toTrimmedString(
         payload.location_details ?? payload.locationDetails
       ),
-      max_attendees: toNumber(payload.max_attendees ?? payload.maxAttendees, 0),
-      ticket_price: toNumber(payload.ticket_price ?? payload.ticketPrice, 0),
+      max_attendees: toNullableNumber(payload.max_attendees ?? payload.maxAttendees),
+      ticket_price: toNullableNumber(payload.ticket_price ?? payload.ticketPrice),
       is_private: Boolean(payload.is_private ?? payload.isPrivate),
       categories: toArray(payload.categories).map((item) => toTrimmedString(item)).filter(Boolean),
       tags: toArray(payload.tags).map((item) => toTrimmedString(item)).filter(Boolean),
