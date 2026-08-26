@@ -12,12 +12,12 @@
     if (!signinLink || !authService?.isLoggedIn) return;
 
     if (authService.isLoggedIn()) {
-      signinLink.textContent = 'My profile';
-      signinLink.href = 'pages/profile.html';
+      signinLink.textContent = 'Dashboard';
+      signinLink.href = 'pages/dashboard.html';
 
       if (mobileAuthLink) {
-        mobileAuthLink.textContent = 'My profile';
-        mobileAuthLink.href = 'pages/profile.html';
+        mobileAuthLink.textContent = 'Dashboard';
+        mobileAuthLink.href = 'pages/dashboard.html';
       }
 
       if (ctaLink) {
