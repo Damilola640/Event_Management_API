@@ -595,6 +595,8 @@
 
   .auth-form-box form {
     padding: 2.1rem 1.4rem;
+    height: auto;
+    min-height: 0;
   }
 
   .mobile-switch {
