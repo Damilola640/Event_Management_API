@@ -109,10 +109,19 @@
   }
 
   async function boot() {
-    siteUi?.initCursor?.();
-    global.EventFlowNavbar?.initNavbar?.();
+    const shell = global.EventFlowDashboardShell;
 
-    const user = await guards?.requireCurrentUser?.('profile.html');
+    // Prefer the app shell (cohesive dashboard chrome); fall back to the
+    // legacy simple layout if the shell containers aren't present.
+    let user = null;
+    if (shell?.mount && document.getElementById('app-sidebar')) {
+      user = await shell.mount({ require: 'auth' });
+    } else {
+      siteUi?.initCursor?.();
+      global.EventFlowNavbar?.initNavbar?.();
+      user = await guards?.requireCurrentUser?.('profile.html');
+    }
+
     if (!user) {
       return;
     }
