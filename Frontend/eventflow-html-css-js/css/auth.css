@@ -47,6 +47,11 @@
   z-index: 1;
 }
 
+.register-form-box form {
+  justify-content: flex-start;
+  overflow-y: auto;
+}
+
 .auth-wrapper.panel-active .login-form-box {
   transform: translateX(100%);
 }
