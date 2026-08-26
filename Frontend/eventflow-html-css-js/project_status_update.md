@@ -388,3 +388,76 @@ rather than adding more feature logic back into the older monolithic file.
 - test password reset with the configured email backend and frontend reset URL
 - connect real OAuth if social sign-in is required
 - continue building organizer-only and dashboard features on the modular structure
+
+## Full Application Build — Complete API Coverage
+
+The frontend was expanded from a marketing site + partial flows into a complete
+application whose UI now exercises **every** backend endpoint. The public landing
+page (`index.html`) is unchanged; a new authenticated **dashboard shell**
+(role-aware sidebar + topbar, live API-health indicator, notifications badge)
+wraps all signed-in pages.
+
+### Backend (minimal, additive — no migrations)
+
+- Wired the pre-existing notification views into `events/urls.py`
+  (`GET /api/events/notifications/`, `POST /api/events/notifications/<uuid>/read/`).
+- Added `RegistrationListView` + `GET /api/events/registrations/` so attendees can
+  list their own bookings; added `event_slug` to `RegistrationSerializer` for linking.
+- Added read-only `is_staff` to `UserSerializer` so the frontend can gate the admin area.
+- Made `InvitationSendView` resilient: if the Celery broker is unavailable it falls
+  back to sending synchronously, so invitations work in dev without Redis.
+
+### New API modules (`js/api/`)
+
+- `catalog.api.js` (venues/speakers/sponsors CRUD, category/tag create),
+  `core.api.js` (health), `notifications.api.js`.
+- Extended `events.api.js` (update, delete, sendInvitation, acceptInvitation,
+  getMyRegistrations) and `users.api.js` (admin listUsers/getUserById).
+- Added a `delete` method to `client.js`.
+
+### New services (`js/services/`)
+
+- `catalog.service.js`, `admin.service.js`, `notification.service.js`.
+- Extended `event.service.js`: update/delete/sendInvitation/acceptInvitation/
+  getMyRegistrations, and now surfaces `speakers`/`sponsors` from the event serializer.
+  Event links repoint to the new `event-detail.html`.
+
+### New UI modules (`js/ui/`)
+
+- `dashboard-shell.js` — the role-aware app shell (attendee / organizer / admin).
+- `resource-manager.js` — one generic list + create/edit/delete component powering
+  the venue, speaker, sponsor (full CRUD) and category/tag (create-only) pages.
+- `toast.js` — shared toast + HTML-escape helper.
+- `event-card.js` gained `renderManageEventCard` and page-aware links; `guards.js`
+  gained `requireAdmin`; `formatters.js` gained date-range / clock / title-case helpers.
+
+### New pages
+
+- Public: `event-detail` (rich view + inline register + organizer edit/delete),
+  `invitation` (accept by token).
+- Dashboard: `dashboard` (stats + health + recent notifications), `my-events`
+  (organizer), `my-bookings`, `edit-event` (update + delete + invite panel),
+  `notifications`. `profile` and `create-event` were moved into the app shell.
+- Catalog/admin: `venues`, `speakers`, `sponsors`, `taxonomy`, `admin-users`.
+- All new pages register in `js/main.js` via `<body data-page>` detection.
+
+### Known API limitations (surfaced in the UI, not worked around)
+
+- Event ↔ speaker/sponsor **association** has no API (through-models are admin-only);
+  the app manages the directories and displays them on events.
+- Event `status` is read-only in the serializer, so the edit form omits it.
+- There is no "list invitations" endpoint, so the invite panel sends + confirms
+  but cannot list previously-sent invites.
+
+### Verification performed
+
+- `node --check` on all 41 JS files; zero referenced-but-undefined `EventFlow*` globals.
+- Backend end-to-end via curl: health, register (organizer/attendee), profile
+  `is_staff`, catalog create, event create/update/delete, register (+409 duplicate),
+  my-registrations, notifications list, admin gating (403 for non-staff), and the full
+  invitation send (202) → accept (200) → duplicate (409) flow.
+- Static server smoke test: all 15 pages + the script/CSS chain return 200.
+- Node harness: 18 assertions over the service-layer transformers against realistic
+  API payloads (nested speakers/sponsors, name-string venue/categories, pagination,
+  null-coercion) — all pass.
+
