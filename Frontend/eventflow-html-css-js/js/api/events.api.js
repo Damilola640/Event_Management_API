@@ -48,9 +48,42 @@
     return client.post('/api/events/', payload, { auth: true });
   }
 
+  async function updateEvent(slug, payload = {}) {
+    ensureDependencies();
+    return client.patch(`/api/events/${encodeURIComponent(slug)}/`, payload, {
+      auth: true,
+    });
+  }
+
+  async function deleteEvent(slug) {
+    ensureDependencies();
+    return client.del(`/api/events/${encodeURIComponent(slug)}/`, { auth: true });
+  }
+
   async function registerForEvent(slug) {
     ensureDependencies();
     return client.post(`/api/events/${encodeURIComponent(slug)}/register/`, undefined, {
+      auth: true,
+    });
+  }
+
+  async function sendInvitation(slug, email) {
+    ensureDependencies();
+    return client.post(
+      `/api/events/${encodeURIComponent(slug)}/invitations/`,
+      { email: String(email || '').trim() },
+      { auth: true }
+    );
+  }
+
+  async function acceptInvitation(token) {
+    ensureDependencies();
+    return client.get(`/api/events/invitations/accept/${encodeURIComponent(token)}/`);
+  }
+
+  async function getMyRegistrations(params = {}) {
+    ensureDependencies();
+    return client.get(`/api/events/registrations/${toQueryString(params)}`, {
       auth: true,
     });
   }
@@ -72,9 +105,14 @@
 
   global.EventFlowEventsApi = {
     createEvent,
+    updateEvent,
+    deleteEvent,
     getEvents,
     getEventBySlug,
     registerForEvent,
+    sendInvitation,
+    acceptInvitation,
+    getMyRegistrations,
     getCategories,
     getTags,
     getVenues,

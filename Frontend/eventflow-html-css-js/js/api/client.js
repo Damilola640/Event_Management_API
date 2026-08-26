@@ -117,6 +117,10 @@
     return request(path, { ...options, method: 'PATCH', body });
   }
 
+  function del(path, options = {}) {
+    return request(path, { ...options, method: 'DELETE' });
+  }
+
   global.EventFlowApiClient = {
     buildUrl,
     formatApiError,
@@ -125,5 +129,7 @@
     post,
     put,
     patch,
+    del,
+    delete: del,
   };
 })(window);

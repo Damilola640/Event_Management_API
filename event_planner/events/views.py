@@ -203,6 +203,23 @@ class EventRegistrationView(APIView):
         return Response(serializer.data, status=status.HTTP_201_CREATED)
 
 
+class RegistrationListView(generics.ListAPIView):
+    """
+    Lists the registrations ("my bookings") belonging to the authenticated user.
+    """
+    serializer_class = RegistrationSerializer
+    permission_classes = [IsAuthenticated]
+    pagination_class = StandardResultsSetPagination
+
+    def get_queryset(self):
+        return (
+            Registration.objects
+            .filter(user=self.request.user)
+            .select_related('event')
+            .order_by('-registration_date')
+        )
+
+
 # --- Venue Views ---
 class VenueListCreateView(generics.ListCreateAPIView):
     queryset = Venue.objects.all()

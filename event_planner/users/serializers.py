@@ -33,8 +33,8 @@ class UserRegistrationSerializer(serializers.ModelSerializer):
 class UserSerializer(serializers.ModelSerializer):
     class Meta:
         model = User
-        fields = ('id', 'username', 'email', 'first_name', 'last_name', 'role', 'date_joined')
-        read_only_fields = ('date_joined', 'role')
+        fields = ('id', 'username', 'email', 'first_name', 'last_name', 'role', 'is_staff', 'date_joined')
+        read_only_fields = ('date_joined', 'role', 'is_staff')
 
 class PasswordResetRequestSerializer(serializers.Serializer):
     email = serializers.EmailField()

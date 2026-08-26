@@ -47,10 +47,11 @@ class TagSerializer(serializers.ModelSerializer):
 class RegistrationSerializer(serializers.ModelSerializer):
     user = serializers.StringRelatedField(read_only=True)
     event_name = serializers.CharField(source='event.name', read_only=True)
-    
+    event_slug = serializers.CharField(source='event.slug', read_only=True)
+
     class Meta:
         model = Registration
-        fields = ['id', 'user', 'event', 'event_name', 'status', 'registration_date']
+        fields = ['id', 'user', 'event', 'event_name', 'event_slug', 'status', 'registration_date']
         read_only_fields = ['id', 'user', 'registration_date']
 
 class InvitationSerializer(serializers.ModelSerializer):

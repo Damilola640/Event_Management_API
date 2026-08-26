@@ -70,12 +70,35 @@
     };
   }
 
+  function normalizeEventSpeaker(item = {}) {
+    // EventSpeakerSerializer renders `speaker` as a display string.
+    return {
+      name: toTrimmedString(item.speaker) || 'Speaker',
+      topic: toTrimmedString(item.presentation_topic),
+      startTime: item.presentation_start_time || null,
+      endTime: item.presentation_end_time || null,
+      raw: item,
+    };
+  }
+
+  function normalizeEventSponsor(item = {}) {
+    // EventSponsorSerializer renders `sponsor` as a display string.
+    return {
+      name: toTrimmedString(item.sponsor) || 'Sponsor',
+      level: toTrimmedString(item.sponsorship_level),
+      amount: item.sponsorship_amount != null ? toNumber(item.sponsorship_amount, 0) : null,
+      raw: item,
+    };
+  }
+
   function mapEventFromApi(event = {}) {
     const categories = toArray(event.categories).map((item) =>
       normalizeTaxonomyItem(item, 'category')
     );
     const tags = toArray(event.tags).map((item) => normalizeTaxonomyItem(item, 'tag'));
     const venue = normalizeVenue(event.venue, event.location_details);
+    const speakers = toArray(event.speakers).map(normalizeEventSpeaker);
+    const sponsors = toArray(event.sponsors).map(normalizeEventSponsor);
     const capacity = toNumber(event.max_attendees ?? event.capacity, 0);
     const registeredCount = toNumber(
       event.registered_count ?? event.attendees_count ?? event.registrations_count,
@@ -108,6 +131,8 @@
       categoryNames: categories.map((item) => item.name).filter(Boolean),
       tags,
       tagNames: tags.map((item) => item.name).filter(Boolean),
+      speakers,
+      sponsors,
       capacity,
       maxAttendees: capacity,
       registeredCount,
@@ -118,7 +143,9 @@
       ticket_price: price,
       isFree: price <= 0,
       isPrivate: Boolean(event.is_private),
-      bookingUrl: event.slug ? `pages/booking.html?slug=${event.slug}` : null,
+      detailUrl: event.slug ? `event-detail.html?slug=${event.slug}` : null,
+      bookingUrl: event.slug ? `event-detail.html?slug=${event.slug}` : null,
+      editUrl: event.slug ? `edit-event.html?slug=${event.slug}` : null,
       image: event.image || event.banner || null,
       organizer: event.organizer || null,
       raw: event,
@@ -197,6 +224,60 @@
     return mapEventFromApi(response);
   }
 
+  async function updateEvent(slug, payload = {}) {
+    ensureDependencies();
+    const response = await eventsApi.updateEvent(slug, normalizeCreateEventPayload(payload));
+    return mapEventFromApi(response);
+  }
+
+  async function deleteEvent(slug) {
+    ensureDependencies();
+    return eventsApi.deleteEvent(slug);
+  }
+
+  async function sendInvitation(slug, email) {
+    ensureDependencies();
+    return eventsApi.sendInvitation(slug, email);
+  }
+
+  async function acceptInvitation(token) {
+    ensureDependencies();
+    return eventsApi.acceptInvitation(token);
+  }
+
+  function normalizeRegistration(item = {}) {
+    return {
+      id: item.id ?? null,
+      status: item.status || 'going',
+      registeredAt: item.registration_date || null,
+      eventId: item.event ?? null,
+      eventName: item.event_name || 'Event',
+      eventSlug: item.event_slug || null,
+      detailUrl: item.event_slug
+        ? `event-detail.html?slug=${item.event_slug}`
+        : null,
+      raw: item,
+    };
+  }
+
+  async function getMyRegistrations(params = {}) {
+    ensureDependencies();
+    const response = await eventsApi.getMyRegistrations(params);
+    const rawItems = Array.isArray(response)
+      ? response
+      : Array.isArray(response?.results)
+        ? response.results
+        : [];
+
+    return {
+      count: toNumber(response?.count, rawItems.length),
+      next: response?.next || null,
+      previous: response?.previous || null,
+      results: rawItems.map(normalizeRegistration),
+      raw: response,
+    };
+  }
+
   async function registerForEvent(slug) {
     ensureDependencies();
     return eventsApi.registerForEvent(slug);
@@ -226,6 +307,11 @@
 
   global.EventFlowEventService = {
     createEvent,
+    updateEvent,
+    deleteEvent,
+    sendInvitation,
+    acceptInvitation,
+    getMyRegistrations,
     getCategories,
     getEventBySlug,
     getTags,
@@ -235,6 +321,7 @@
     normalizeCreateEventPayload,
     mapEventFromApi,
     mapPaginatedEventsResponse,
+    normalizeRegistration,
     normalizeTaxonomyItem,
     normalizeVenue,
     registerForEvent,

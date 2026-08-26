@@ -23,6 +23,13 @@ urlpatterns = [
     path('categories/', views.CategoryListCreateView.as_view(), name='category-list-create'),
     path('tags/', views.TagListCreateView.as_view(), name='tag-list-create'),
 
+    # Notification URLs
+    path('notifications/', views.NotificationListView.as_view(), name='notification-list'),
+    path('notifications/<uuid:pk>/read/', views.NotificationMarkAsReadView.as_view(), name='notification-read'),
+
+    # Current user's registrations ("my bookings")
+    path('registrations/', views.RegistrationListView.as_view(), name='registration-list'),
+
     # Event URLs
     path('', views.EventListCreateView.as_view(), name='event-list-create'),
     path('<slug:slug>/register/', views.EventRegistrationView.as_view(), name='event-register'),
