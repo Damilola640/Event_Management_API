@@ -305,10 +305,19 @@ class InvitationSendView(APIView):
             return Response({"detail": "An invitation has already been sent to this email for this event."}, status=status.HTTP_409_CONFLICT)
 
         invitation = Invitation.objects.create(event=event, email=email, invited_by=request.user)
-        
-        # Send the invitation email asynchronously using Celery
-        send_invitation_email_task.delay(str(invitation.id))
-        
+
+        # Send the invitation email asynchronously via Celery. If the broker is
+        # unavailable (e.g. local dev without Redis), fall back to sending
+        # synchronously so the invitation is still created and delivered.
+        try:
+            send_invitation_email_task.delay(str(invitation.id))
+        except Exception:
+            try:
+                send_invitation_email_task(str(invitation.id))
+            except Exception:
+                # The invitation record exists; email delivery is best-effort.
+                pass
+
         serializer = InvitationSerializer(invitation)
         return Response(serializer.data, status=status.HTTP_202_ACCEPTED)
 
